@@ -2,11 +2,6 @@
 
 using MetadataExtractor.Formats.Jpeg;
 using MetadataExtractor.Formats.Tiff;
-#if NET35
-using DirectoryList = System.Collections.Generic.IList<MetadataExtractor.Directory>;
-#else
-using DirectoryList = System.Collections.Generic.IReadOnlyList<MetadataExtractor.Directory>;
-#endif
 
 namespace MetadataExtractor.Formats.Exif
 {
@@ -18,18 +13,16 @@ namespace MetadataExtractor.Formats.Exif
     /// <author>Drew Noakes https://drewnoakes.com</author>
     public sealed class ExifReader : JpegSegmentWithPreambleMetadataReader
     {
-        public const string JpegSegmentPreamble = "Exif\x0\x0";
+        public static ReadOnlySpan<byte> JpegSegmentPreamble => "Exif\x0\x0"u8;
 
-        private static readonly byte[] _preambleBytes = Encoding.ASCII.GetBytes(JpegSegmentPreamble);
+        public static bool StartsWithJpegExifPreamble(ReadOnlySpan<byte> bytes) => bytes.StartsWith(JpegSegmentPreamble);
 
-        public static bool StartsWithJpegExifPreamble(byte[] bytes) => bytes.StartsWith(_preambleBytes);
-
-        public static int JpegSegmentPreambleLength => _preambleBytes.Length;
+        public static int JpegSegmentPreambleLength => JpegSegmentPreamble.Length;
 
         /// <summary>Exif data stored in JPEG files' APP1 segment are preceded by this six character preamble "Exif\0\0".</summary>
-        protected override byte[] PreambleBytes => _preambleBytes;
+        protected override ReadOnlySpan<byte> PreambleBytes => JpegSegmentPreamble;
 
-        public override ICollection<JpegSegmentType> SegmentTypes { get; } = new[] { JpegSegmentType.App1 };
+        public override IReadOnlyCollection<JpegSegmentType> SegmentTypes { get; } = [JpegSegmentType.App1];
 
         protected override IEnumerable<Directory> Extract(byte[] segmentBytes, int preambleLength)
         {
@@ -39,7 +32,7 @@ namespace MetadataExtractor.Formats.Exif
         /// <summary>
         /// Reads TIFF formatted Exif data a specified offset within a <see cref="IndexedReader"/>.
         /// </summary>
-        public DirectoryList Extract(IndexedReader reader, int exifStartOffset)
+        public IReadOnlyList<Directory> Extract(IndexedReader reader, int exifStartOffset)
         {
             var directories = new List<Directory>();
             var exifTiffHandler = new ExifTiffHandler(directories, exifStartOffset);

@@ -4,11 +4,6 @@ using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Exif.Makernotes;
 using MetadataExtractor.Formats.Tiff;
 using MetadataExtractor.Formats.Xmp;
-#if NET35
-using DirectoryList = System.Collections.Generic.IList<MetadataExtractor.Directory>;
-#else
-using DirectoryList = System.Collections.Generic.IReadOnlyList<MetadataExtractor.Directory>;
-#endif
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference
 #pragma warning disable CS8604 // Dereference of a possibly null reference
@@ -20,7 +15,7 @@ namespace MetadataExtractor.Formats.QuickTime
         private static readonly DateTime _epoch = new(1904, 1, 1);
         private static readonly int[] _supportedAtomValueTypes = [1, 13, 14, 23, 27];
 
-        public static DirectoryList ReadMetadata(Stream stream)
+        public static IReadOnlyList<Directory> ReadMetadata(Stream stream)
         {
             var directories = new List<Directory>();
             var metaDataKeys = new List<string>();
@@ -267,9 +262,9 @@ namespace MetadataExtractor.Formats.QuickTime
                     }
                     case "uuid":
                     {
-                        var cr3 = new byte[] { 0x85, 0xc0, 0xb6, 0x87, 0x82, 0x0f, 0x11, 0xe0, 0x81, 0x11, 0xf4, 0xce, 0x46, 0x2b, 0x6a, 0x48 };
+                        ReadOnlySpan<byte> cr3 = [0x85, 0xc0, 0xb6, 0x87, 0x82, 0x0f, 0x11, 0xe0, 0x81, 0x11, 0xf4, 0xce, 0x46, 0x2b, 0x6a, 0x48];
                         var uuid = a.Reader.GetBytes(cr3.Length);
-                        if (cr3.RegionEquals(0, cr3.Length, uuid))
+                        if (cr3.SequenceEqual(uuid))
                         {
                             QuickTimeReader.ProcessAtoms(stream, UuidHandler, a.BytesLeft);
                         }
@@ -301,7 +296,7 @@ namespace MetadataExtractor.Formats.QuickTime
                         a.Reader.Skip(4L);
                         var partId = a.Reader.GetUInt32();
                         var featureCode = a.Reader.GetUInt32();
-                        var featureValue = string.Join(" ", a.Reader.GetBytes(4).Select(v => v.ToString("X2")).ToArray());
+                        var featureValue = string.Join(" ", a.Reader.GetBytes(4).Select(v => v.ToString("X2")));
                         Debug.WriteLine($"PartId={partId} FeatureCode={featureCode} FeatureValue={featureValue}");
                         break;
                     }
@@ -320,11 +315,13 @@ namespace MetadataExtractor.Formats.QuickTime
                     }
                     case "uuid":
                     {
-                        var xmp = new byte[] { 0xbe, 0x7a, 0xcf, 0xcb, 0x97, 0xa9, 0x42, 0xe8, 0x9c, 0x71, 0x99, 0x94, 0x91, 0xe3, 0xaf, 0xac };
+                        ReadOnlySpan<byte> xmp = [0xbe, 0x7a, 0xcf, 0xcb, 0x97, 0xa9, 0x42, 0xe8, 0x9c, 0x71, 0x99, 0x94, 0x91, 0xe3, 0xaf, 0xac];
                         if (a.BytesLeft >= xmp.Length)
                         {
-                            var uuid = a.Reader.GetBytes(xmp.Length);
-                            if (xmp.RegionEquals(0, xmp.Length, uuid))
+                            Span<byte> uuid = stackalloc byte[16]; // xmp length is 16
+
+                            a.Reader.GetBytes(uuid);
+                            if (xmp.SequenceEqual(uuid))
                             {
                                 var xmpBytes = a.Reader.GetNullTerminatedBytes((int)a.BytesLeft);
                                 var xmpDirectory = new XmpReader().Extract(xmpBytes);

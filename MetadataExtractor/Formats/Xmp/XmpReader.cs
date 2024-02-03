@@ -19,13 +19,10 @@ namespace MetadataExtractor.Formats.Xmp
     /// <author>Drew Noakes https://drewnoakes.com</author>
     public sealed class XmpReader : IJpegSegmentMetadataReader
     {
-        public const string JpegSegmentPreamble = "http://ns.adobe.com/xap/1.0/\0";
-        public const string JpegSegmentPreambleExtension = "http://ns.adobe.com/xmp/extension/\0";
+        public static ReadOnlySpan<byte> JpegSegmentPreamble => "http://ns.adobe.com/xap/1.0/\0"u8;
+        public static ReadOnlySpan<byte> JpegSegmentPreambleExtension => "http://ns.adobe.com/xmp/extension/\0"u8;
 
-        private static byte[] JpegSegmentPreambleBytes { get; } = Encoding.UTF8.GetBytes(JpegSegmentPreamble);
-        private static byte[] JpegSegmentPreambleExtensionBytes { get; } = Encoding.UTF8.GetBytes(JpegSegmentPreambleExtension);
-
-        ICollection<JpegSegmentType> IJpegSegmentMetadataReader.SegmentTypes { get; } = new[] { JpegSegmentType.App1 };
+        IReadOnlyCollection<JpegSegmentType> IJpegSegmentMetadataReader.SegmentTypes { get; } = [JpegSegmentType.App1];
 
         public IEnumerable<Directory> ReadJpegSegments(IEnumerable<JpegSegment> segments)
         {
@@ -36,7 +33,7 @@ namespace MetadataExtractor.Formats.Xmp
             {
                 if (IsXmpSegment(segment))
                 {
-                    yield return Extract(segment.Bytes, JpegSegmentPreambleBytes.Length, segment.Bytes.Length - JpegSegmentPreambleBytes.Length);
+                    yield return Extract(segment.Bytes, JpegSegmentPreamble.Length, segment.Bytes.Length - JpegSegmentPreamble.Length);
                 }
             }
 
@@ -47,7 +44,7 @@ namespace MetadataExtractor.Formats.Xmp
                 var buffer = new MemoryStream();
                 foreach (var segment in extensionGroup)
                 {
-                    var n = JpegSegmentPreambleExtensionBytes.Length + 32 + 4 + 4;
+                    var n = JpegSegmentPreambleExtension.Length + 32 + 4 + 4;
                     buffer.Write(segment.Bytes, n, segment.Bytes.Length - n);
                 }
 
@@ -59,10 +56,10 @@ namespace MetadataExtractor.Formats.Xmp
             }
         }
 
-        private static string GetExtendedDataGuid(JpegSegment segment) => Encoding.UTF8.GetString(segment.Bytes, JpegSegmentPreambleExtensionBytes.Length, 32);
+        private static string GetExtendedDataGuid(JpegSegment segment) => Encoding.UTF8.GetString(segment.Bytes, JpegSegmentPreambleExtension.Length, 32);
 
-        private static bool IsXmpSegment(JpegSegment segment) => segment.Bytes.StartsWith(JpegSegmentPreambleBytes);
-        private static bool IsExtendedXmpSegment(JpegSegment segment) => segment.Bytes.StartsWith(JpegSegmentPreambleExtensionBytes);
+        private static bool IsXmpSegment(JpegSegment segment) => segment.Span.StartsWith(JpegSegmentPreamble);
+        private static bool IsExtendedXmpSegment(JpegSegment segment) => segment.Span.StartsWith(JpegSegmentPreambleExtension);
 
         public XmpDirectory Extract(byte[] xmpBytes) => Extract(xmpBytes, 0, xmpBytes.Length);
 
@@ -75,10 +72,29 @@ namespace MetadataExtractor.Formats.Xmp
             if (xmpBytes.Length < offset + length)
                 throw new ArgumentException("Extends beyond length of byte array.", nameof(length));
 
+            ReadOnlySpan<byte> bytes = xmpBytes.AsSpan(offset, length);
+
             // Trim any trailing null bytes
             // https://github.com/drewnoakes/metadata-extractor-dotnet/issues/154
-            while (xmpBytes[offset + length - 1] == 0)
-                length--;
+            while (bytes[bytes.Length - 1] == 0)
+                bytes = bytes.Slice(0, bytes.Length - 1);
+
+            // Validate the end of the XMP package
+            // https://github.com/drewnoakes/metadata-extractor-dotnet/issues/356
+            ScanForEnding(bytes, """<?xpacket end="r"?>"""u8);
+            ScanForEnding(bytes, """<?xpacket end="w"?>"""u8);
+
+            void ScanForEnding(ReadOnlySpan<byte> bytes, ReadOnlySpan<byte> pattern)
+            {
+                var index = bytes.IndexOf(pattern);
+
+                if (index != -1)
+                {
+                    index += pattern.Length;
+                    if (index < length)
+                        length = index;
+                }
+            }
 
             var directory = new XmpDirectory();
             try

@@ -8,15 +8,15 @@ namespace MetadataExtractor.Formats.Photoshop
     /// <author>Drew Noakes https://drewnoakes.com</author>
     public sealed class DuckyReader : IJpegSegmentMetadataReader
     {
-        public const string JpegSegmentPreamble = "Ducky";
+        public static ReadOnlySpan<byte> JpegSegmentPreamble => "Ducky"u8;
 
-        ICollection<JpegSegmentType> IJpegSegmentMetadataReader.SegmentTypes { get; } = new[] { JpegSegmentType.AppC };
+        IReadOnlyCollection<JpegSegmentType> IJpegSegmentMetadataReader.SegmentTypes { get; } = [JpegSegmentType.AppC];
 
         public IEnumerable<Directory> ReadJpegSegments(IEnumerable<JpegSegment> segments)
         {
             // Skip segments not starting with the required header
             return segments
-                .Where(segment => segment.Bytes.Length >= JpegSegmentPreamble.Length && JpegSegmentPreamble == Encoding.UTF8.GetString(segment.Bytes, 0, JpegSegmentPreamble.Length))
+                .Where(static segment => segment.Span.StartsWith(JpegSegmentPreamble))
                 .Select(segment => (Directory)Extract(new SequentialByteArrayReader(segment.Bytes, JpegSegmentPreamble.Length)));
         }
 

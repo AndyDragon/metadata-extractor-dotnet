@@ -6,12 +6,6 @@ using MetadataExtractor.Formats.Iptc;
 using MetadataExtractor.Formats.Jpeg;
 using MetadataExtractor.Formats.Xmp;
 
-#if NET35
-using DirectoryList = System.Collections.Generic.IList<MetadataExtractor.Directory>;
-#else
-using DirectoryList = System.Collections.Generic.IReadOnlyList<MetadataExtractor.Directory>;
-#endif
-
 namespace MetadataExtractor.Formats.Photoshop
 {
     /// <summary>Reads metadata created by Photoshop and stored in the APPD segment of JPEG files.</summary>
@@ -24,11 +18,11 @@ namespace MetadataExtractor.Formats.Photoshop
     /// <author>Drew Noakes https://drewnoakes.com</author>
     public sealed class PhotoshopReader : JpegSegmentWithPreambleMetadataReader
     {
-        public const string JpegSegmentPreamble = "Photoshop 3.0";
+        public static ReadOnlySpan<byte> JpegSegmentPreamble => "Photoshop 3.0"u8;
 
-        protected override byte[] PreambleBytes { get; } = Encoding.ASCII.GetBytes(JpegSegmentPreamble);
+        protected override ReadOnlySpan<byte> PreambleBytes => JpegSegmentPreamble;
 
-        public override ICollection<JpegSegmentType> SegmentTypes { get; } = new[] { JpegSegmentType.AppD };
+        public override IReadOnlyCollection<JpegSegmentType> SegmentTypes { get; } = [JpegSegmentType.AppD];
 
         protected override IEnumerable<Directory> Extract(byte[] segmentBytes, int preambleLength)
         {
@@ -39,10 +33,10 @@ namespace MetadataExtractor.Formats.Photoshop
                     length: segmentBytes.Length - preambleLength - 1);
             }
 
-            return Enumerable.Empty<Directory>();
+            return [];
         }
 
-        public DirectoryList Extract(SequentialReader reader, int length)
+        public IReadOnlyList<Directory> Extract(SequentialReader reader, int length)
         {
             var directory = new PhotoshopDirectory();
 

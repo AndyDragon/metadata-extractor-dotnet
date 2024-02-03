@@ -1,5 +1,7 @@
 ﻿// Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System.Buffers;
+
 namespace MetadataExtractor.Formats.Apple;
 
 /// <summary>
@@ -11,21 +13,21 @@ public sealed class BplistReader
     // https://opensource.apple.com/source/CF/CF-550/CFBinaryPList.c
     // https://synalysis.com/how-to-decode-apple-binary-property-list-files/
 
-    private static readonly byte[] _bplistHeader = [(byte)'b', (byte)'p', (byte)'l', (byte)'i', (byte)'s', (byte)'t', (byte)'0', (byte)'0'];
+    private static ReadOnlySpan<byte> BplistHeader => "bplist00"u8;
 
     /// <summary>
     /// Gets whether <paramref name="bplist"/> starts with the expected header bytes.
     /// </summary>
     public static bool IsValid(byte[] bplist)
     {
-        if (bplist.Length < _bplistHeader.Length)
+        if (bplist.Length < BplistHeader.Length)
         {
             return false;
         }
 
-        for (int i = 0; i < _bplistHeader.Length; i++)
+        for (int i = 0; i < BplistHeader.Length; i++)
         {
-            if (bplist[i] != _bplistHeader[i])
+            if (bplist[i] != BplistHeader[i])
             {
                 return false;
             }
@@ -59,7 +61,7 @@ public sealed class BplistReader
             }
         }
 
-        List<object> objects = new();
+        List<object> objects = [];
 
         for (int i = 0; i < offsets.Length; i++)
         {
@@ -120,19 +122,21 @@ public sealed class BplistReader
 
         Dictionary<byte, byte> HandleDict(byte count)
         {
-            var keyRefs = new byte[count];
+            var keyRefs = ArrayPool<byte>.Shared.Rent(count);
 
             for (int j = 0; j < count; j++)
             {
                 keyRefs[j] = reader.GetByte();
             }
 
-            Dictionary<byte, byte> map = new();
+            Dictionary<byte, byte> map = [];
 
             for (int j = 0; j < count; j++)
             {
                 map.Add(keyRefs[j], reader.GetByte());
             }
+
+            ArrayPool<byte>.Shared.Return(keyRefs);
 
             return map;
         }

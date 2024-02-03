@@ -1,6 +1,8 @@
 async
 avci
+beginimage
 bplist
+classpath
 Colour
 coloured
 Digilux
@@ -8,6 +10,7 @@ epsf
 exif
 Exiftool
 fffzzz
+flir
 Foveon
 ftyp
 graymap
@@ -33,6 +36,7 @@ rationals
 Reconyx
 sbytes
 sszzz
+stderr
 stdout
 targa
 Thunderscan
@@ -43,4 +47,6 @@ Truevision
 uncoloured
 uuid
 webp
+xmpcore
+xpacket
 Yakov

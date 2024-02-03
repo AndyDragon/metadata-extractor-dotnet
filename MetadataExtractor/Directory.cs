@@ -1,11 +1,5 @@
 // Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-#if NET35
-using DirectoryList = System.Collections.Generic.IList<MetadataExtractor.Directory>;
-#else
-using DirectoryList = System.Collections.Generic.IReadOnlyList<MetadataExtractor.Directory>;
-#endif
-
 namespace MetadataExtractor
 {
     /// <summary>
@@ -15,21 +9,21 @@ namespace MetadataExtractor
     /// <author>Drew Noakes https://drewnoakes.com</author>
     public abstract class Directory
     {
-#if NETSTANDARD1_3 || NETSTANDARD2_0
+#if NETSTANDARD
         static Directory()
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 #endif
-        internal static readonly DirectoryList EmptyList = new Directory[0];
+        internal static readonly IReadOnlyList<Directory> EmptyList = [];
 
         private readonly Dictionary<int, string>? _tagNameMap;
 
         /// <summary>Map of values hashed by type identifiers.</summary>
-        private readonly Dictionary<int, object> _tagMap = new();
+        private readonly Dictionary<int, object> _tagMap = [];
 
         /// <summary>Holds tags in the order in which they were stored.</summary>
-        private readonly List<Tag> _definedTagList = new();
+        private readonly List<Tag> _definedTagList = [];
 
         private readonly List<string> _errorList = new(capacity: 4);
 
@@ -53,7 +47,7 @@ namespace MetadataExtractor
         /// <summary>Attempts to find the name of the specified tag.</summary>
         /// <param name="tagType">The tag to look up.</param>
         /// <param name="tagName">The found name, if any.</param>
-        /// <returns><c>true</c> if the tag is known and <paramref name="tagName"/> was set, otherwise <c>false</c>.</returns>
+        /// <returns><see langword="true"/> if the tag is known and <paramref name="tagName"/> was set, otherwise <see langword="false"/>.</returns>
         protected virtual bool TryGetTagName(int tagType, [NotNullWhen(returnValue: true)] out string? tagName)
         {
             if (_tagNameMap is null)
@@ -75,13 +69,7 @@ namespace MetadataExtractor
 
         /// <summary>Returns all <see cref="Tag"/> objects that have been set in this <see cref="Directory"/>.</summary>
         /// <value>The list of <see cref="Tag"/> objects.</value>
-        public
-#if NET35
-            IEnumerable<Tag>
-#else
-            IReadOnlyList<Tag>
-#endif
-            Tags => _definedTagList;
+        public IReadOnlyList<Tag> Tags => _definedTagList;
 
         /// <summary>Returns the number of tags set in this Directory.</summary>
         /// <value>the number of tags set in this Directory</value>
@@ -102,18 +90,12 @@ namespace MetadataExtractor
 
         /// <summary>Gets a value indicating whether this directory has one or more errors.</summary>
         /// <remarks>Error messages are accessible via <see cref="Errors"/>.</remarks>
-        /// <returns><c>true</c> if the directory contains errors, otherwise <c>false</c></returns>
+        /// <returns><see langword="true"/> if the directory contains errors, otherwise <see langword="false"/></returns>
         public bool HasError => _errorList.Count > 0;
 
         /// <summary>Used to iterate over any error messages contained in this directory.</summary>
         /// <value>The collection of error message strings.</value>
-        public
-#if NET35
-            IEnumerable<string>
-#else
-            IReadOnlyList<string>
-#endif
-            Errors => _errorList;
+        public IReadOnlyList<string> Errors => _errorList;
 
         #endregion
 

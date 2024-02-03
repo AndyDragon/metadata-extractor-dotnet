@@ -385,7 +385,7 @@ namespace MetadataExtractor.Formats.Exif
                 if (directory.GetObject(ExifDirectoryBase.TagGeoTiffGeoKeys) is ushort[] geoKeys)
                 {
                     // GetTIFF stores data in its own format within TIFF. It is TIFF-like, but different.
-                    // It can reference data frm tags that have not been visited yet, so we must unpack it
+                    // It can reference data from tags that have not been visited yet, so we must unpack it
                     // once the directory is complete.
                     ProcessGeoTiff(geoKeys, directory);
                 }
@@ -446,7 +446,7 @@ namespace MetadataExtractor.Formats.Exif
                     }
                     else if (sourceValue is Array sourceArray)
                     {
-                        if (valueOffset + valueCount < sourceArray.Length)
+                        if (valueOffset + valueCount <= sourceArray.Length)
                         {
                             var array = Array.CreateInstance(sourceArray.GetType().GetElementType(), valueCount);
                             Array.Copy(sourceArray, valueOffset, array, 0, valueCount);

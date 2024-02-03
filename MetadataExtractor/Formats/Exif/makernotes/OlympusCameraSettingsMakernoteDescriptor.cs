@@ -12,13 +12,9 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
     /// </remarks>
     /// <author>Kevin Mott https://github.com/kwhopper</author>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class OlympusCameraSettingsMakernoteDescriptor : TagDescriptor<OlympusCameraSettingsMakernoteDirectory>
+    public sealed class OlympusCameraSettingsMakernoteDescriptor(OlympusCameraSettingsMakernoteDirectory directory)
+        : TagDescriptor<OlympusCameraSettingsMakernoteDirectory>(directory)
     {
-        public OlympusCameraSettingsMakernoteDescriptor(OlympusCameraSettingsMakernoteDirectory directory)
-            : base(directory)
-        {
-        }
-
         public override string? GetDescription(int tagType)
         {
             return tagType switch
@@ -655,15 +651,15 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (Directory.GetObject(OlympusCameraSettingsMakernoteDirectory.TagGradation) is not short[] values || values.Length < 3)
                 return null;
 
-            var join = $"{values[0]} {values[1]} {values[2]}";
-            var ret = join switch
+            var ret = (values[0], values[1], values[2]) switch
             {
-                "0 0 0" => "n/a",
-                "-1 -1 1" => "Low Key",
-                "0 -1 1" => "Normal",
-                "1 -1 1" => "High Key",
-                _ => "Unknown (" + join + ")",
+                (0, 0, 0) => "n/a",
+                (-1, -1, 1) => "Low Key",
+                (0, -1, 1) => "Normal",
+                (1, -1, 1) => "High Key",
+                _ => $"Unknown ({values[0]} {values[1]} {values[2]})"
             };
+
             if (values.Length > 3)
             {
                 if (values[3] == 0)
@@ -800,7 +796,7 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             var sb = new StringBuilder();
             for (var i = 0; i < values.Length; i++)
             {
-                if (i == 0 || i == 4 || i == 8 || i == 12 || i == 16 || i == 20 || i == 24)
+                if (i is 0 or 4 or 8 or 12 or 16 or 20 or 24)
                     sb.Append(_toneLevelType[values[i]] + "; ");
                 else
                     sb.Append(values[i] + "; ");

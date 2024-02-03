@@ -3,13 +3,9 @@
 namespace MetadataExtractor.Formats.Png
 {
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class PngDescriptor : TagDescriptor<PngDirectory>
+    public sealed class PngDescriptor(PngDirectory directory)
+        : TagDescriptor<PngDirectory>(directory)
     {
-        public PngDescriptor(PngDirectory directory)
-            : base(directory)
-        {
-        }
-
         public override string? GetDescription(int tagType)
         {
             return tagType switch
@@ -77,13 +73,7 @@ namespace MetadataExtractor.Formats.Png
         {
             return Directory.GetObject(PngDirectory.TagTextualData) is not IList<KeyValuePair> pairs
                 ? null
-                : string.Join(
-                    "\n",
-                    pairs.Select(kv => $"{kv.Key}: {kv.Value}")
-#if NET35
-                    .ToArray()
-#endif
-                    );
+                : string.Join("\n", pairs.Select(kv => $"{kv.Key}: {kv.Value}"));
         }
 
         public string? GetBackgroundColorDescription()

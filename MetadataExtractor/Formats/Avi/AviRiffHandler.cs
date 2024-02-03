@@ -29,7 +29,7 @@ namespace MetadataExtractor.Formats.Avi
             _directories = directories;
         }
 
-        public bool ShouldAcceptRiffIdentifier(string identifier) => identifier == "AVI ";
+        public bool ShouldAcceptRiffIdentifier(ReadOnlySpan<byte> identifier) => identifier.SequenceEqual("AVI "u8);
 
         public bool ShouldAcceptChunk(string fourCc) => fourCc switch
         {
@@ -39,13 +39,12 @@ namespace MetadataExtractor.Formats.Avi
             _ => false
         };
 
-        public bool ShouldAcceptList(string fourCc) => fourCc switch
+        public bool ShouldAcceptList(ReadOnlySpan<byte> fourCc)
         {
-            "hdrl" => true,
-            "strl" => true,
-            "AVI " => true,
-            _ => false
-        };
+            return fourCc.SequenceEqual("hdrl"u8)
+                || fourCc.SequenceEqual("strl"u8)
+                || fourCc.SequenceEqual("AVI "u8);
+        }
 
         public void ProcessChunk(string fourCc, byte[] payload)
         {

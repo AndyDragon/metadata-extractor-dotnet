@@ -5,12 +5,6 @@ using MetadataExtractor.Formats.Photoshop;
 using MetadataExtractor.Formats.Tiff;
 using MetadataExtractor.Formats.Xmp;
 
-#if NET35
-using DirectoryList = System.Collections.Generic.IList<MetadataExtractor.Directory>;
-#else
-using DirectoryList = System.Collections.Generic.IReadOnlyList<MetadataExtractor.Directory>;
-#endif
-
 namespace MetadataExtractor.Formats.Eps
 {
     /// <summary>Reads file passed in through SequentialReader and parses encountered data:</summary>
@@ -41,7 +35,7 @@ namespace MetadataExtractor.Formats.Eps
     {
         private int _previousTag;
 
-        public DirectoryList Extract(Stream inputStream)
+        public IReadOnlyList<Directory> Extract(Stream inputStream)
         {
             IndexedReader reader = new IndexedSeekingReader(inputStream);
             var directory = new EpsDirectory();
@@ -124,7 +118,7 @@ namespace MetadataExtractor.Formats.Eps
                 while (true)
                 {
                     char c = (char)reader.GetByte();
-                    if (c == '\r' || c == '\n')
+                    if (c is '\r' or '\n')
                         break;
                     line.Append(c);
                 }
@@ -165,10 +159,8 @@ namespace MetadataExtractor.Formats.Eps
         /// <param name="value">String that holds value of current comment</param>
         private void AddToDirectory(EpsDirectory directory, string name, string value)
         {
-            if (!EpsDirectory.TagIntegerMap.ContainsKey(name))
+            if (!EpsDirectory.TagIntegerMap.TryGetValue(name, out int tag))
                 return;
-
-            var tag = EpsDirectory.TagIntegerMap[name];
 
             switch (tag)
             {
@@ -260,7 +252,7 @@ namespace MetadataExtractor.Formats.Eps
         /// </summary>
         private static void ExtractXmpData(List<Directory> directories, SequentialReader reader)
         {
-            byte[] xmp = ReadUntil(reader, Encoding.UTF8.GetBytes("<?xpacket end=\"w\"?>"));
+            byte[] xmp = ReadUntil(reader, "<?xpacket end=\"w\"?>"u8);
             directories.Add(new XmpReader().Extract(xmp));
         }
 
@@ -268,7 +260,7 @@ namespace MetadataExtractor.Formats.Eps
         /// Reads all bytes until the given sentinel is observed.
         /// The sentinel will be included in the returned bytes.
         /// </summary>
-        private static byte[] ReadUntil(SequentialReader reader, byte[] sentinel)
+        private static byte[] ReadUntil(SequentialReader reader, ReadOnlySpan<byte> sentinel)
         {
             var bytes = new MemoryStream();
 
@@ -288,25 +280,6 @@ namespace MetadataExtractor.Formats.Eps
             return bytes.ToArray();
         }
 
-        /**
-         * EPS files can contain hexadecimal-encoded ASCII blocks, each prefixed with <c>"% "</c>.
-         * This method reads such a block and returns a byte[] of the decoded contents.
-         * Reading stops at the first invalid line, which is discarded (it's a terminator anyway).
-         * <p/>
-         * For example:
-         * <pre><code>
-         * %BeginPhotoshop: 9564
-         * % 3842494D040400000000005D1C015A00031B25471C0200000200041C02780004
-         * % 6E756C6C1C027A00046E756C6C1C025000046E756C6C1C023700083230313630
-         * % 3331311C023C000B3131343335362B303030301C023E00083230313630333131
-         * % 48000000010000003842494D03FD0000000000080101000000000000
-         * %EndPhotoshop
-         * </code></pre>
-         * When calling this method, the reader must be positioned at the start of the first line containing
-         * hex data, not at the introductory line.
-         *
-         * @return The decoded bytes, or <code>null</code> if decoding failed.
-         */
         /// <remarks>
         /// EPS files can contain hexadecimal-encoded ASCII blocks, each prefixed with "% ".
         /// This method reads such a block and returns a byte[] of the decoded contents.
@@ -324,7 +297,7 @@ namespace MetadataExtractor.Formats.Eps
         /// When calling this method, the reader must be positioned at the start of the first line containing
         /// hex data, not at the introductory line.
         /// </remarks>
-        /// <returns>The decoded bytes, or null if decoding failed.</returns>
+        /// <returns>The decoded bytes, or <see langword="null"/> if decoding failed.</returns>
         private static byte[]? DecodeHexCommentBlock(SequentialReader reader)
         {
             var bytes = new MemoryStream();

@@ -48,7 +48,7 @@ namespace MetadataExtractor.Tests.IO
         [Fact]
         public void GetInt16()
         {
-            Assert.Equal(-1, CreateReader(new[] { (byte)0xff, (byte)0xff }).GetInt16());
+            Assert.Equal(-1, CreateReader([0xff, 0xff]).GetInt16());
 
             var buffer = new byte[] { 0x00, 0x01, 0x7F, 0xFF };
 
@@ -90,7 +90,7 @@ namespace MetadataExtractor.Tests.IO
         [Fact]
         public void GetInt32()
         {
-            Assert.Equal(-1, CreateReader(new[] { (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff }).GetInt32());
+            Assert.Equal(-1, CreateReader([0xff, 0xff, 0xff, 0xff]).GetInt32());
 
             var buffer = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07 };
 
@@ -108,7 +108,7 @@ namespace MetadataExtractor.Tests.IO
         [Fact]
         public void GetUInt32()
         {
-            Assert.Equal(4294967295u, CreateReader(new byte[] { 0xff, 0xff, 0xff, 0xff }).GetUInt32());
+            Assert.Equal(4294967295u, CreateReader([0xff, 0xff, 0xff, 0xff]).GetUInt32());
 
             var buffer = new byte[] { 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
 
@@ -182,7 +182,7 @@ namespace MetadataExtractor.Tests.IO
             const int NanBits = 0x7fc00000;
             Assert.True(float.IsNaN(BitConverter.ToSingle(BitConverter.GetBytes(NanBits), 0)));
 
-            var reader = CreateReader(new byte[] { 0x7f, 0xc0, 0x00, 0x00 });
+            var reader = CreateReader([0x7f, 0xc0, 0x00, 0x00]);
             Assert.True(float.IsNaN(reader.GetFloat32()));
         }
 
@@ -192,29 +192,29 @@ namespace MetadataExtractor.Tests.IO
             const long NanBits = unchecked((long)0xfff0000000000001L);
             Assert.True(double.IsNaN(BitConverter.Int64BitsToDouble(NanBits)));
 
-            var reader = CreateReader(new byte[] { 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 });
+            var reader = CreateReader([0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]);
             Assert.True(double.IsNaN(reader.GetDouble64()));
         }
 
         [Fact]
         public void GetNullTerminatedString()
         {
-            var bytes = new byte[] { 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
+            var bytes = "ABCDEFG"u8.ToArray();
 
             // Test max length
             for (var i = 0; i < bytes.Length; i++)
                 Assert.Equal("ABCDEFG".Substring(0, i - 0), CreateReader(bytes).GetNullTerminatedString(i));
 
-            Assert.Equal(string.Empty, CreateReader(new byte[] { 0 }).GetNullTerminatedString(10));
-            Assert.Equal("A", CreateReader(new byte[] { 0x41, 0 }).GetNullTerminatedString(10));
-            Assert.Equal("AB", CreateReader(new byte[] { 0x41, 0x42, 0 }).GetNullTerminatedString(10));
-            Assert.Equal("AB", CreateReader(new byte[] { 0x41, 0x42, 0, 0x43 }).GetNullTerminatedString(10));
+            Assert.Equal(string.Empty, CreateReader([0]).GetNullTerminatedString(10));
+            Assert.Equal("A", CreateReader([0x41, 0]).GetNullTerminatedString(10));
+            Assert.Equal("AB", CreateReader([0x41, 0x42, 0]).GetNullTerminatedString(10));
+            Assert.Equal("AB", CreateReader([0x41, 0x42, 0, 0x43]).GetNullTerminatedString(10));
         }
 
         [Fact]
         public void GetString()
         {
-            var bytes = new byte[] { 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47 };
+            var bytes = "ABCDEFG"u8.ToArray();
             var expected = Encoding.UTF8.GetString(bytes);
 
             Assert.Equal(bytes.Length, expected.Length);
@@ -236,7 +236,7 @@ namespace MetadataExtractor.Tests.IO
         }
 
         [Fact]
-        public void OverflowBoundsCalculation()
+        public void GetBytes_OverflowBoundsCalculation()
         {
             var reader = CreateReader(new byte[10]);
             var ex = Assert.Throws<IOException>(() => reader.GetBytes(15));
@@ -244,7 +244,7 @@ namespace MetadataExtractor.Tests.IO
         }
 
         [Fact]
-        public void GetBytesEof()
+        public void GetBytes_Eof()
         {
             CreateReader(new byte[50]).GetBytes(50);
 
@@ -255,8 +255,45 @@ namespace MetadataExtractor.Tests.IO
             Assert.Throws<IOException>(() => CreateReader(new byte[50]).GetBytes(51));
         }
 
+#if NET
         [Fact]
-        public void GetByteEof()
+        public void GetBytes_Span()
+        {
+            var bytes = new byte[] { 0, 1, 2, 3, 4, 5 };
+            for (var i = 0; i < bytes.Length; i++)
+            {
+                var reader = CreateReader(bytes);
+#pragma warning disable CA2014 // Do not use stackalloc in loops
+                Span<byte> span = stackalloc byte[i];
+#pragma warning restore CA2014 // Do not use stackalloc in loops
+                reader.GetBytes(span);
+                Assert.Equal(bytes.Take(i).ToArray(), span.ToArray());
+            }
+        }
+
+        [Fact]
+        public void GetBytes_OverflowBoundsCalculation_Span()
+        {
+            var reader = CreateReader(new byte[10]);
+            var ex = Assert.Throws<IOException>(() => reader.GetBytes(stackalloc byte[15]));
+            Assert.Equal("End of data reached.", ex.Message);
+        }
+
+        [Fact]
+        public void GetBytes_Eof_Span()
+        {
+            CreateReader(new byte[50]).GetBytes(stackalloc byte[50]);
+
+            var reader = CreateReader(new byte[50]);
+            reader.GetBytes(stackalloc byte[25]);
+            reader.GetBytes(stackalloc byte[25]);
+
+            Assert.Throws<IOException>(() => CreateReader(new byte[50]).GetBytes(stackalloc byte[51]));
+        }
+#endif
+
+        [Fact]
+        public void GetByte_Eof()
         {
             CreateReader(new byte[1]).GetByte();
 

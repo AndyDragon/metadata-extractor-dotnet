@@ -27,7 +27,7 @@ namespace MetadataExtractor
         /// <summary>Gets the numerator.</summary>
         public long Numerator { get; }
 
-        /// <summary>Initialises a new instance with the <paramref name="numerator"/> and <paramref name="denominator"/>.</summary>
+        /// <summary>Initializes a new instance with the <paramref name="numerator"/> and <paramref name="denominator"/>.</summary>
         public Rational(long numerator, long denominator)
         {
             Numerator = numerator;
@@ -104,7 +104,7 @@ namespace MetadataExtractor
         /// <remarks>May incur truncation.</remarks>
         public decimal ToDecimal() => Denominator == 0 ? 0M : Numerator / (decimal)Denominator;
 
-        /// <summary>Returns <c>true</c> if the value is non-zero, otherwise <c>false</c>.</summary>
+        /// <summary>Returns <see langword="true"/> if the value is non-zero, otherwise <see langword="false"/>.</summary>
         public bool ToBoolean() => Numerator != 0 && Denominator != 0;
 
         #region IConvertible

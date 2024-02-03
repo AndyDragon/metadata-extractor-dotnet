@@ -1,6 +1,6 @@
 ![metadata-extractor logo](https://raw.githubusercontent.com/drewnoakes/metadata-extractor/master/Resources/metadata-extractor-logo.svg)
 
-[![Build Status](https://dev.azure.com/metadata-extractor/metadata-extractor-dotnet/_apis/build/status/drewnoakes.metadata-extractor-dotnet?branchName=master)](https://dev.azure.com/metadata-extractor/metadata-extractor-dotnet/_build/latest?definitionId=1&branchName=master)
+[![Build Status](https://github.com/drewnoakes/metadata-extractor-dotnet/actions/workflows/CI.yml/badge.svg)](https://github.com/drewnoakes/metadata-extractor-dotnet/actions/)
 [![MetadataExtractor NuGet version](https://img.shields.io/nuget/v/MetadataExtractor)](https://www.nuget.org/packages/MetadataExtractor/)
 [![MetadataExtractor NuGet download count](https://img.shields.io/nuget/dt/MetadataExtractor)](https://www.nuget.org/packages/MetadataExtractor/)
 
@@ -143,18 +143,21 @@ Camera-specific "makernote" data is decoded for cameras manufactured by:
 
 This library targets:
 
-- .NET Framework 3.5 (`net35`)
-- .NET Framework 4.5 (`net45`)
+- .NET Framework 4.6.2 (`net462`)
 - .NET Standard 1.3 (`netstandard1.3`)
-- .NET Standard 2.0 (`netstandard2.0`)
+- .NET Standard 2.1 (`netstandard2.1`)
 
 All target frameworks are provided via the [one NuGet package](https://www.nuget.org/packages/MetadataExtractor).
 
-`net35` and `net45` target the full .NET Framework. `net45` uses the newer `IReadOnlyList<>` on some public APIs where `net35` uses `IList<>`. Internally `net45` also uses some newer library features for slightly improved performance.
-
 `netstandard1.3` implements version 1.3 of the [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) which covers .NET Core, Mono, Xamarin platforms, UWP, and future platforms. 
 
+`netstandard2.1` implements version 2.1 of the .NET Standard, which uses newer APIs where possible.
+
+`net462` targets the full .NET Framework, from version 4.6.2 onwards.
+
 A PCL build was supported until [version 1.5.3](https://www.nuget.org/packages/MetadataExtractor/1.5.3) which supported Silverlight 5.0, Windows 8.0, Windows Phone 8.1 and Windows Phone Silverlight 8.0. PCL versions did not support file-system metadata due to restricted IO APIs.
+
+A `net3.5` build was supported until [version 2.8.1](https://www.nuget.org/packages/MetadataExtractor/2.8.1). Support for this framework was dropped in early 2024 to enable use of newer, more efficient, .NET APIs.
 
 ## Building
 

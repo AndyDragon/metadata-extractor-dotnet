@@ -3,6 +3,7 @@ root = true
 [*]
 
 # Spell checker configuration
+spelling_languages = en-us,en-gb
 spelling_exclusion_path = spelling.dic
 
 [*.cs]
@@ -29,11 +30,6 @@ csharp_indent_case_contents = true
 csharp_indent_case_contents_when_block = false
 csharp_indent_switch_labels = true
 csharp_indent_labels = flush_left
-
-# Prefer "var" everywhere
-csharp_style_var_for_built_in_types = true:suggestion
-csharp_style_var_when_type_is_apparent = true:suggestion
-csharp_style_var_elsewhere = true:suggestion
 
 # Prefer method-like constructs to have a block body
 csharp_style_expression_bodied_methods = false:none
@@ -211,7 +207,7 @@ dotnet_diagnostic.CA1028.severity = suggestion                    # Make enum un
 dotnet_diagnostic.CA1031.severity = suggestion                    # Catch more specific exception type
 dotnet_diagnostic.CA1032.severity = suggestion                    # Exceptions should have certain constructors
 dotnet_diagnostic.CA1034.severity = suggestion                    # Do not nest public type
-dotnet_diagnostic.CA1062.severity = suggestion                    # Validate args in externally visible members
+dotnet_diagnostic.CA1062.severity = none                          # Validate args in externally visible members
 dotnet_diagnostic.CA1707.severity = suggestion                    # Remove underscores from member name
 dotnet_diagnostic.CA1716.severity = suggestion                    # Rename virtual/interface member to not use keyword (for consumers in other languages)
 dotnet_diagnostic.CA1720.severity = suggestion                    # Identifier contains type name
@@ -223,6 +219,10 @@ dotnet_diagnostic.CA1812.severity = suggestion                    # Internal cla
 dotnet_diagnostic.CA1724.severity = suggestion                    # Type name conflicts with namespace
 
 dotnet_diagnostic.CA1303.severity = none                          # Literal string should be localised
+
+dotnet_diagnostic.RS0016.severity = error                         # Symbol must be part of public API
+dotnet_diagnostic.RS0017.severity = error                         # Symbol is part of the declared API, but could not be found
+dotnet_diagnostic.RS0025.severity = error                         # Symbol appears more than once in the public API files
 
 # working around bug
 dotnet_diagnostic.RS0041.severity = none                          # Public members should not use oblivious types

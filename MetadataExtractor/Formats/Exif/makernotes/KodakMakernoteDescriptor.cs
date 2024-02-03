@@ -6,13 +6,9 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
     /// Provides human-readable string representations of tag values stored in a <see cref="KodakMakernoteDirectory"/>.
     /// </summary>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class KodakMakernoteDescriptor : TagDescriptor<KodakMakernoteDirectory>
+    public sealed class KodakMakernoteDescriptor(KodakMakernoteDirectory directory)
+        : TagDescriptor<KodakMakernoteDirectory>(directory)
     {
-        public KodakMakernoteDescriptor(KodakMakernoteDirectory directory)
-            : base(directory)
-        {
-        }
-
         public override string? GetDescription(int tagType)
         {
             return tagType switch
@@ -40,28 +36,17 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (!Directory.TryGetInt32(KodakMakernoteDirectory.TagColorMode, out int value))
                 return null;
 
-            switch (value)
+            return value switch
             {
-                case 0x0001:
-                case 0x2000:
-                    return "B&W";
-                case 0x0002:
-                case 0x4000:
-                    return "Sepia";
-                case 0x003:
-                    return "B&W Yellow Filter";
-                case 0x004:
-                    return "B&W Red Filter";
-                case 0x020:
-                    return "Saturated Color";
-                case 0x040:
-                case 0x200:
-                    return "Neutral Color";
-                case 0x100:
-                    return "Saturated Color";
-                default:
-                    return "Unknown (" + value + ")";
-            }
+                0x0001 or 0x2000 => "B&W",
+                0x0002 or 0x4000 => "Sepia",
+                0x003 => "B&W Yellow Filter",
+                0x004 => "B&W Red Filter",
+                0x020 => "Saturated Color",
+                0x040 or 0x200 => "Neutral Color",
+                0x100 => "Saturated Color",
+                _ => $"Unknown ({value})"
+            };
         }
 
         public string? GetFlashFiredDescription()
@@ -74,22 +59,14 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (!Directory.TryGetInt32(KodakMakernoteDirectory.TagFlashMode, out int value))
                 return null;
 
-            switch (value)
+            return value switch
             {
-                case 0x00:
-                    return "Auto";
-                case 0x10:
-                case 0x01:
-                    return "Fill Flash";
-                case 0x20:
-                case 0x02:
-                    return "Off";
-                case 0x40:
-                case 0x03:
-                    return "Red Eye";
-                default:
-                    return "Unknown (" + value + ")";
-            }
+                0x00 => "Auto",
+                0x10 or 0x01 => "Fill Flash",
+                0x20 or 0x02 => "Off",
+                0x40 or 0x03 => "Red Eye",
+                _ => $"Unknown ({value})"
+            };
         }
 
         public string? GetWhiteBalanceDescription()

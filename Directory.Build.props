@@ -1,12 +1,11 @@
 <Project>
 
   <PropertyGroup>
-    <VersionPrefix>2.8.1</VersionPrefix>
     <DebugType>portable</DebugType>
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <Authors>Drew Noakes</Authors>
-    <Copyright>Copyright Drew Noakes 2002-2023</Copyright>
+    <Copyright>Copyright Drew Noakes 2002-2024</Copyright>
     <PackageIcon>metadata-extractor-logo-128.png</PackageIcon>
     <PackageProjectUrl>https://github.com/drewnoakes/metadata-extractor-dotnet</PackageProjectUrl>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
@@ -25,10 +24,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 
-    <!-- This avoids needing to have .NET targeting packs installed (e.g. for .NET 3.5) -->
+    <!-- Avoid needing to have targeting packs installed for .NET Framework. -->
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>
 

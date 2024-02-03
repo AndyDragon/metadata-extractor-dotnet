@@ -1,5 +1,7 @@
 // Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System.Buffers;
+
 namespace MetadataExtractor.Formats.Iptc
 {
     public static class Iso2022Converter
@@ -12,7 +14,7 @@ namespace MetadataExtractor.Formats.Iptc
         private const byte Esc = 0x1B;
 
         /// <summary>Attempts to convert the given ISO2022 escape sequence to an encoding name.</summary>
-        public static string? ConvertEscapeSequenceToEncodingName(byte[] bytes)
+        public static string? ConvertEscapeSequenceToEncodingName(ReadOnlySpan<byte> bytes)
         {
             if (bytes.Length > 2 && bytes[0] == Esc && bytes[1] == PercentSign && bytes[2] == LatinCapitalG)
                 return "UTF-8";
@@ -43,7 +45,7 @@ namespace MetadataExtractor.Formats.Iptc
         /// The two other checks are less reliable.
         /// </remarks>
         /// <param name="bytes">some text as bytes</param>
-        /// <returns>the name of the encoding or null if none could be guessed</returns>
+        /// <returns>the name of the encoding or <see langword="null"/> if none could be guessed</returns>
         internal static Encoding? GuessEncoding(byte[] bytes)
         {
             // First, give ASCII a shot
@@ -89,18 +91,23 @@ namespace MetadataExtractor.Formats.Iptc
 
             foreach (var encoding in encodings)
             {
-                Debug.Assert(encoding is not null);
+                char[] charBuffer = ArrayPool<char>.Shared.Rent(encoding.GetMaxCharCount(bytes.Length));
+
                 try
                 {
-                    // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-                    var s = encoding!.GetString(bytes, 0, bytes.Length);
-                    if (s.IndexOf((char)65533) != -1)
+                    int charCount = encoding.GetChars(bytes, 0, bytes.Length, charBuffer, 0);
+
+                    if (charBuffer.AsSpan(0, charCount).IndexOf((char)65533) != -1)
                         continue;
                     return encoding;
                 }
                 catch
                 {
                     // fall through...
+                }
+                finally
+                {
+                    ArrayPool<char>.Shared.Return(charBuffer);
                 }
             }
 

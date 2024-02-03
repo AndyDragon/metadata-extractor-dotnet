@@ -1,5 +1,8 @@
 // Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System.Buffers;
+using System.Buffers.Binary;
+
 namespace MetadataExtractor.IO
 {
     /// <summary>Base class for reading sequentially through a sequence of data encoded in a byte stream.</summary>
@@ -13,32 +16,37 @@ namespace MetadataExtractor.IO
     /// <see cref="IsMotorolaByteOrder"/>.
     /// </remarks>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public abstract class SequentialReader
+    public abstract class SequentialReader(bool isMotorolaByteOrder)
     {
-        protected SequentialReader(bool isMotorolaByteOrder)
-        {
-            IsMotorolaByteOrder = isMotorolaByteOrder;
-        }
-
-        /// <summary>Get and set the byte order of this reader. <c>true</c> by default.</summary>
+        /// <summary>Get and set the byte order of this reader. <see langword="true"/> by default.</summary>
         /// <remarks>
         /// <list type="bullet">
-        ///   <item><c>true</c> for Motorola (or big) endianness (also known as network byte order), with MSB before LSB.</item>
-        ///   <item><c>false</c> for Intel (or little) endianness, with LSB before MSB.</item>
+        ///   <item><see langword="true"/> for Motorola (or big) endianness (also known as network byte order), with MSB before LSB.</item>
+        ///   <item><see langword="false"/> for Intel (or little) endianness, with LSB before MSB.</item>
         /// </list>
         /// </remarks>
-        /// <value><c>true</c> for Motorola/big endian, <c>false</c> for Intel/little endian</value>
-        public bool IsMotorolaByteOrder { get; }
+        /// <value><see langword="true"/> for Motorola/big endian, <see langword="false"/> for Intel/little endian</value>
+        public bool IsMotorolaByteOrder { get; } = isMotorolaByteOrder;
 
+        /// <summary>
+        /// Gets the current position in the sequence.
+        /// </summary>
         public abstract long Position { get; }
 
         public abstract SequentialReader WithByteOrder(bool isMotorolaByteOrder);
 
         /// <summary>Returns the required number of bytes from the sequence.</summary>
+        /// <remarks>Byte ordering is not governed by <see cref="IsMotorolaByteOrder"/>.</remarks>
         /// <param name="count">The number of bytes to be returned</param>
         /// <returns>The requested bytes</returns>
         /// <exception cref="IOException"/>
         public abstract byte[] GetBytes(int count);
+
+        /// <summary>
+        /// Populates the specified byte span with the next bytes from the sequence.
+        /// </summary>
+        /// <param name="bytes">The span of bytes to populate.</param>
+        public abstract void GetBytes(Span<byte> bytes);
 
         /// <summary>Retrieves bytes, writing them into a caller-provided buffer.</summary>
         /// <param name="buffer">The array to write bytes to.</param>
@@ -100,17 +108,13 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException"/>
         public ushort GetUInt16()
         {
-            if (IsMotorolaByteOrder)
-            {
-                // Motorola - MSB first
-                return (ushort)
-                    (GetByte() << 8 |
-                     GetByte());
-            }
-            // Intel ordering - LSB first
-            return (ushort)
-                (GetByte() |
-                 GetByte() << 8);
+            Span<byte> bytes = stackalloc byte[2];
+
+            GetBytes(bytes);
+
+            return IsMotorolaByteOrder
+                ? BinaryPrimitives.ReadUInt16BigEndian(bytes)
+                : BinaryPrimitives.ReadUInt16LittleEndian(bytes);
         }
 
         /// <summary>Returns a signed 16-bit int calculated from two bytes of data (MSB, LSB).</summary>
@@ -118,17 +122,13 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException">the buffer does not contain enough bytes to service the request</exception>
         public short GetInt16()
         {
-            if (IsMotorolaByteOrder)
-            {
-                // Motorola - MSB first
-                return (short)
-                    (GetByte() << 8 |
-                     GetByte());
-            }
-            // Intel ordering - LSB first
-            return (short)
-                (GetByte() |
-                 GetByte() << 8);
+            Span<byte> bytes = stackalloc byte[2];
+
+            GetBytes(bytes);
+
+            return IsMotorolaByteOrder
+                ? BinaryPrimitives.ReadInt16BigEndian(bytes)
+                : BinaryPrimitives.ReadInt16LittleEndian(bytes);
         }
 
         /// <summary>Get a 32-bit unsigned integer from the buffer, returning it as a long.</summary>
@@ -136,21 +136,13 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException">the buffer does not contain enough bytes to service the request</exception>
         public uint GetUInt32()
         {
-            if (IsMotorolaByteOrder)
-            {
-                // Motorola - MSB first (big endian)
-                return (uint)
-                    (GetByte() << 24 |
-                     GetByte() << 16 |
-                     GetByte() << 8  |
-                     GetByte());
-            }
-            // Intel ordering - LSB first (little endian)
-            return (uint)
-                (GetByte()       |
-                 GetByte() << 8  |
-                 GetByte() << 16 |
-                 GetByte() << 24);
+            Span<byte> bytes = stackalloc byte[4];
+
+            GetBytes(bytes);
+
+            return IsMotorolaByteOrder
+                ? BinaryPrimitives.ReadUInt32BigEndian(bytes)
+                : BinaryPrimitives.ReadUInt32LittleEndian(bytes);
         }
 
         /// <summary>Returns a signed 32-bit integer from four bytes of data.</summary>
@@ -158,21 +150,13 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException">the buffer does not contain enough bytes to service the request</exception>
         public int GetInt32()
         {
-            if (IsMotorolaByteOrder)
-            {
-                // Motorola - MSB first (big endian)
-                return
-                    GetByte() << 24 |
-                    GetByte() << 16 |
-                    GetByte() << 8  |
-                    GetByte();
-            }
-            // Intel ordering - LSB first (little endian)
-            return
-                GetByte()       |
-                GetByte() <<  8 |
-                GetByte() << 16 |
-                GetByte() << 24;
+            Span<byte> bytes = stackalloc byte[4];
+
+            GetBytes(bytes);
+
+            return IsMotorolaByteOrder
+                ? BinaryPrimitives.ReadInt32BigEndian(bytes)
+                : BinaryPrimitives.ReadInt32LittleEndian(bytes);
         }
 
         /// <summary>Get a signed 64-bit integer from the buffer.</summary>
@@ -180,29 +164,12 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException">the buffer does not contain enough bytes to service the request</exception>
         public long GetInt64()
         {
-            if (IsMotorolaByteOrder)
-            {
-                // Motorola - MSB first
-                return
-                    (long)GetByte() << 56 |
-                    (long)GetByte() << 48 |
-                    (long)GetByte() << 40 |
-                    (long)GetByte() << 32 |
-                    (long)GetByte() << 24 |
-                    (long)GetByte() << 16 |
-                    (long)GetByte() << 8  |
-                          GetByte();
-            }
-            // Intel ordering - LSB first
-            return
-                      GetByte()       |
-                (long)GetByte() << 8  |
-                (long)GetByte() << 16 |
-                (long)GetByte() << 24 |
-                (long)GetByte() << 32 |
-                (long)GetByte() << 40 |
-                (long)GetByte() << 48 |
-                (long)GetByte() << 56;
+            Span<byte> bytes = stackalloc byte[8];
+            GetBytes(bytes);
+
+            return IsMotorolaByteOrder
+                ? BinaryPrimitives.ReadInt64BigEndian(bytes)
+                : BinaryPrimitives.ReadInt64LittleEndian(bytes);
         }
 
         /// <summary>Get an unsigned 64-bit integer from the buffer.</summary>
@@ -210,29 +177,12 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException">the buffer does not contain enough bytes to service the request</exception>
         public ulong GetUInt64()
         {
-            if (IsMotorolaByteOrder)
-            {
-                // Motorola - MSB first
-                return
-                    (ulong)GetByte() << 56 |
-                    (ulong)GetByte() << 48 |
-                    (ulong)GetByte() << 40 |
-                    (ulong)GetByte() << 32 |
-                    (ulong)GetByte() << 24 |
-                    (ulong)GetByte() << 16 |
-                    (ulong)GetByte() << 8  |
-                           GetByte();
-            }
-            // Intel ordering - LSB first
-            return
-                       GetByte()       |
-                (ulong)GetByte() << 8  |
-                (ulong)GetByte() << 16 |
-                (ulong)GetByte() << 24 |
-                (ulong)GetByte() << 32 |
-                (ulong)GetByte() << 40 |
-                (ulong)GetByte() << 48 |
-                (ulong)GetByte() << 56;
+            Span<byte> bytes = stackalloc byte[8];
+            GetBytes(bytes);
+
+            return IsMotorolaByteOrder
+                ? BinaryPrimitives.ReadUInt64BigEndian(bytes)
+                : BinaryPrimitives.ReadUInt64LittleEndian(bytes);
         }
 
 #pragma warning restore format
@@ -271,8 +221,33 @@ namespace MetadataExtractor.IO
         /// <exception cref="IOException"/>
         public string GetString(int bytesRequested, Encoding encoding)
         {
-            var bytes = GetBytes(bytesRequested);
-            return encoding.GetString(bytes, 0, bytes.Length);
+            // This check is important on .NET Framework
+            if (bytesRequested is 0)
+            {
+                return "";
+            }
+            else if (bytesRequested < 256)
+            {
+                Span<byte> bytes = stackalloc byte[bytesRequested];
+
+                GetBytes(bytes);
+
+                return encoding.GetString(bytes);
+            }
+            else
+            {
+                byte[] bytes = ArrayPool<byte>.Shared.Rent(bytesRequested);
+
+                Span<byte> span = bytes.AsSpan().Slice(0, bytesRequested);
+
+                GetBytes(span);
+
+                var s = encoding.GetString(span);
+
+                ArrayPool<byte>.Shared.Return(bytes);
+
+                return s;
+            }
         }
 
         public StringValue GetStringValue(int bytesRequested, Encoding? encoding = null)
@@ -299,7 +274,7 @@ namespace MetadataExtractor.IO
         {
             var bytes = GetNullTerminatedBytes(maxLengthBytes, moveToMaxLength);
 
-            return (encoding ?? Encoding.UTF8).GetString(bytes, 0, bytes.Length);
+            return (encoding ?? Encoding.UTF8).GetString(bytes);
         }
 
         /// <summary>
@@ -364,7 +339,7 @@ namespace MetadataExtractor.IO
             }
 
             if (length == 0)
-                return Empty.ByteArray;
+                return [];
             if (length == maxLengthBytes)
                 return buffer;
             var bytes = new byte[length];

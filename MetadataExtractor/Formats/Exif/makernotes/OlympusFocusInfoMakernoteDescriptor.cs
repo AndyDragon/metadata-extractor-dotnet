@@ -12,13 +12,9 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
     /// </remarks>
     /// <author>Kevin Mott https://github.com/kwhopper</author>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class OlympusFocusInfoMakernoteDescriptor : TagDescriptor<OlympusFocusInfoMakernoteDirectory>
+    public sealed class OlympusFocusInfoMakernoteDescriptor(OlympusFocusInfoMakernoteDirectory directory)
+        : TagDescriptor<OlympusFocusInfoMakernoteDirectory>(directory)
     {
-        public OlympusFocusInfoMakernoteDescriptor(OlympusFocusInfoMakernoteDirectory directory)
-            : base(directory)
-        {
-        }
-
         public override string? GetDescription(int tagType)
         {
             return tagType switch
@@ -34,7 +30,7 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
                 OlympusFocusInfoMakernoteDirectory.TagMacroLed => GetMacroLedDescription(),
                 OlympusFocusInfoMakernoteDirectory.TagSensorTemperature => GetSensorTemperatureDescription(),
                 OlympusFocusInfoMakernoteDirectory.TagImageStabilization => GetImageStabilizationDescription(),
-                _ => base.GetDescription(tagType),
+                _ => base.GetDescription(tagType)
             };
         }
 
@@ -58,7 +54,7 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
         {
             if (!Directory.TryGetRational(OlympusFocusInfoMakernoteDirectory.TagFocusDistance, out Rational value))
                 return "inf";
-            if (value.Numerator == 0xFFFFFFFF || value.Numerator == 0x00000000)
+            if (value.Numerator is 0xFFFFFFFF or 0x00000000)
                 return "inf";
 
             return value.Numerator / 1000.0 + " m";
@@ -81,13 +77,11 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (Directory.GetObject(OlympusFocusInfoMakernoteDirectory.TagExternalFlash) is not ushort[] values || values.Length < 2)
                 return null;
 
-            var join = $"{values[0]} {values[1]}";
-
-            return join switch
+            return (values[0], values[1]) switch
             {
-                "0 0" => "Off",
-                "1 0" => "On",
-                _ => "Unknown (" + join + ")",
+                (0, 0) => "Off",
+                (1, 0) => "On",
+                _ => $"Unknown ({values[0]} {values[1]})"
             };
         }
 
@@ -113,15 +107,13 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (values.Length == 0)
                 return null;
 
-            var join = $"{values[0]}" + (values.Length > 1 ? $"{ values[1]}" : "");
-
-            return join switch
+            return (values[0], values.Length > 1 ? values[1] : -1) switch
             {
-                "0" => "Off",
-                "1" => "On",
-                "0 0" => "Off",
-                "1 0" => "On",
-                _ => "Unknown (" + join + ")",
+                (0, -1) => "Off",
+                (1, -1) => "On",
+                (0, 0) => "Off",
+                (1, 0) => "On",
+                _ => $"Unknown ({string.Join(" ", values)})"
             };
         }
 

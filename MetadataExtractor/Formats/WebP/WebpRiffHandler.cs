@@ -30,7 +30,7 @@ namespace MetadataExtractor.Formats.WebP
             _directories = directories;
         }
 
-        public bool ShouldAcceptRiffIdentifier(string identifier) => identifier == "WEBP";
+        public bool ShouldAcceptRiffIdentifier(ReadOnlySpan<byte> identifier) => identifier.SequenceEqual("WEBP"u8);
 
         public bool ShouldAcceptChunk(string fourCc) => fourCc == "VP8X" ||
                                                         fourCc == "VP8L" ||
@@ -39,7 +39,7 @@ namespace MetadataExtractor.Formats.WebP
                                                         fourCc == "ICCP" ||
                                                         fourCc == "XMP ";
 
-        public bool ShouldAcceptList(string fourCc) => false;
+        public bool ShouldAcceptList(ReadOnlySpan<byte> fourCc) => false;
 
         public void ProcessChunk(string fourCc, byte[] payload)
         {

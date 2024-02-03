@@ -8,17 +8,11 @@ namespace MetadataExtractor.Formats.Exif
 {
     /// <summary>Base class for several Exif format descriptor classes.</summary>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public abstract class ExifDescriptorBase<T> : TagDescriptor<T> where T : Directory
+    public abstract class ExifDescriptorBase<T>(T directory)
+        : TagDescriptor<T>(directory) where T : Directory
     {
-        protected ExifDescriptorBase(T directory)
-            : base(directory)
-        {
-        }
-
         public override string? GetDescription(int tagType)
         {
-            // TODO order case blocks and corresponding methods in the same order as the TAG_* values are defined
-
 #pragma warning disable format
 
             return tagType switch
@@ -179,7 +173,7 @@ namespace MetadataExtractor.Formats.Exif
             try
             {
                 // Decode the Unicode string and trim the Unicode zero "\0" from the end.
-                return Encoding.Unicode.GetString(bytes, 0, bytes.Length).TrimEnd('\0');
+                return Encoding.Unicode.GetString(bytes).TrimEnd('\0');
             }
             catch
             {

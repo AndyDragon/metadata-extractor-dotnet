@@ -1,27 +1,21 @@
 // Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System.Buffers.Binary;
 using System.IO.Compression;
-
 using MetadataExtractor.Formats.Exif;
-using MetadataExtractor.Formats.Icc;
 using MetadataExtractor.Formats.FileSystem;
+using MetadataExtractor.Formats.Icc;
 using MetadataExtractor.Formats.Iptc;
 using MetadataExtractor.Formats.Tiff;
 using MetadataExtractor.Formats.Xmp;
-
-#if NET35
-using DirectoryList = System.Collections.Generic.IList<MetadataExtractor.Directory>;
-#else
-using DirectoryList = System.Collections.Generic.IReadOnlyList<MetadataExtractor.Directory>;
-#endif
 
 namespace MetadataExtractor.Formats.Png
 {
     /// <author>Drew Noakes https://drewnoakes.com</author>
     public static class PngMetadataReader
     {
-        private static readonly HashSet<PngChunkType> _desiredChunkTypes = new()
-        {
+        private static readonly HashSet<PngChunkType> _desiredChunkTypes =
+        [
             PngChunkType.IHDR,
             PngChunkType.PLTE,
             PngChunkType.tRNS,
@@ -37,11 +31,11 @@ namespace MetadataExtractor.Formats.Png
             PngChunkType.pHYs,
             PngChunkType.sBIT,
             PngChunkType.eXIf
-        };
+        ];
 
         /// <exception cref="PngProcessingException"/>
         /// <exception cref="IOException"/>
-        public static DirectoryList ReadMetadata(string filePath)
+        public static IReadOnlyList<Directory> ReadMetadata(string filePath)
         {
             var directories = new List<Directory>();
 
@@ -55,7 +49,7 @@ namespace MetadataExtractor.Formats.Png
 
         /// <exception cref="PngProcessingException"/>
         /// <exception cref="IOException"/>
-        public static DirectoryList ReadMetadata(Stream stream)
+        public static IReadOnlyList<Directory> ReadMetadata(Stream stream)
         {
             List<Directory>? directories = null;
 
@@ -147,7 +141,7 @@ namespace MetadataExtractor.Formats.Png
             }
             else if (chunkType == PngChunkType.gAMA)
             {
-                var gammaInt = ByteConvert.ToInt32BigEndian(bytes);
+                var gammaInt = BinaryPrimitives.ReadInt32BigEndian(bytes);
                 var directory = new PngDirectory(PngChunkType.gAMA);
                 directory.Set(PngDirectory.TagGamma, gammaInt / 100000.0);
                 yield return directory;
@@ -379,7 +373,7 @@ namespace MetadataExtractor.Formats.Png
                         yield return ReadTextDirectory(keyword, textBytes, chunkType);
                     }
                 }
-                else if (keyword == "Raw profile type exif" || keyword == "Raw profile type APP1")
+                else if (keyword is "Raw profile type exif" or "Raw profile type APP1")
                 {
                     if (TryProcessRawProfile(out _))
                     {
@@ -395,7 +389,7 @@ namespace MetadataExtractor.Formats.Png
                         yield return ReadTextDirectory(keyword, textBytes, chunkType);
                     }
                 }
-                else if (keyword == "Raw profile type icc" || keyword == "Raw profile type icm")
+                else if (keyword is "Raw profile type icc" or "Raw profile type icm")
                 {
                     if (TryProcessRawProfile(out _))
                     {
@@ -592,14 +586,7 @@ namespace MetadataExtractor.Formats.Png
             {
                 var ms = new MemoryStream();
 
-#if !NET35
                 inflaterStream.CopyTo(ms);
-#else
-                var buffer = new byte[1024];
-                int count;
-                while ((count = inflaterStream.Read(buffer, 0, 256)) > 0)
-                    ms.Write(buffer, 0, count);
-#endif
 
                 textBytes = ms.ToArray();
             }

@@ -188,7 +188,9 @@ namespace MetadataExtractor.Tests.IO
 
             var reader = CreateReader(0x7f, 0xc0, 0x00, 0x00);
 
-            Assert.True(float.IsNaN(reader.GetFloat32(0)));
+            float f = reader.GetFloat32(0);
+
+            Assert.True(float.IsNaN(f), $"Expected NaN, got {f}.");
         }
 
         [Fact]
@@ -199,7 +201,9 @@ namespace MetadataExtractor.Tests.IO
 
             var reader = CreateReader(0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 
-            Assert.True(double.IsNaN(reader.GetDouble64(0)));
+            double d = reader.GetDouble64(0);
+
+            Assert.True(double.IsNaN(d), $"Expected NaN, got {d}.");
         }
 
         [Fact]
@@ -291,7 +295,7 @@ namespace MetadataExtractor.Tests.IO
             Assert.Equal(10, reader.Length);
             Assert.Equal(0, reader.GetByte(0));
             Assert.Equal(1, reader.GetByte(1));
-            Assert.Equal(new byte[] { 0, 1 }, reader.GetBytes(0, 2));
+            Assert.Equal([0, 1], reader.GetBytes(0, 2));
             Assert.Equal(4, reader.ToUnshiftedOffset(4));
 
             reader = reader.WithShiftedBaseOffset(2);
@@ -300,7 +304,7 @@ namespace MetadataExtractor.Tests.IO
             Assert.Equal(8, reader.Length);
             Assert.Equal(2, reader.GetByte(0));
             Assert.Equal(3, reader.GetByte(1));
-            Assert.Equal(new byte[] { 2, 3 }, reader.GetBytes(0, 2));
+            Assert.Equal([2, 3], reader.GetBytes(0, 2));
             Assert.Equal(6, reader.ToUnshiftedOffset(4));
 
             reader = reader.WithShiftedBaseOffset(2);
@@ -309,7 +313,7 @@ namespace MetadataExtractor.Tests.IO
             Assert.Equal(6, reader.Length);
             Assert.Equal(4, reader.GetByte(0));
             Assert.Equal(5, reader.GetByte(1));
-            Assert.Equal(new byte[] { 4, 5 }, reader.GetBytes(0, 2));
+            Assert.Equal([4, 5], reader.GetBytes(0, 2));
             Assert.Equal(8, reader.ToUnshiftedOffset(4));
         }
     }

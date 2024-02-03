@@ -13,22 +13,16 @@ namespace MetadataExtractor
     /// The introduction of this type allows full transparency and control over the use of string data extracted
     /// by the library during the read phase.
     /// </remarks>
-    public readonly struct StringValue : IConvertible
+    public readonly struct StringValue(byte[] bytes, Encoding? encoding = null) : IConvertible
     {
         /// <summary>
         /// The encoding used when decoding a <see cref="StringValue"/> that does not specify its encoding.
         /// </summary>
         public static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
-        public StringValue(byte[] bytes, Encoding? encoding = null)
-        {
-            Bytes = bytes;
-            Encoding = encoding;
-        }
+        public byte[] Bytes { get; } = bytes;
 
-        public byte[] Bytes { get; }
-
-        public Encoding? Encoding { get; }
+        public Encoding? Encoding { get; } = encoding;
 
         #region IConvertible
 
@@ -62,7 +56,22 @@ namespace MetadataExtractor
         {
             try
             {
+#if NETSTANDARD1_3 || NETFRAMEWORK
                 return int.Parse(ToString());
+#else
+                if (Bytes.Length < 100)
+                {
+                    var encoding = Encoding ?? DefaultEncoding;
+                    int charCount = encoding.GetCharCount(Bytes);
+                    Span<char> chars = stackalloc char[charCount];
+                    encoding.GetChars(Bytes, chars);
+                    return int.Parse(chars);
+                }
+                else
+                {
+                    return int.Parse(ToString());
+                }
+#endif
             }
             catch (Exception)
             {
@@ -86,7 +95,22 @@ namespace MetadataExtractor
         {
             try
             {
+#if NETSTANDARD1_3 || NETFRAMEWORK
                 return uint.Parse(ToString());
+#else
+                if (Bytes.Length < 100)
+                {
+                    var encoding = Encoding ?? DefaultEncoding;
+                    int charCount = encoding.GetCharCount(Bytes);
+                    Span<char> chars = stackalloc char[charCount];
+                    encoding.GetChars(Bytes, chars);
+                    return uint.Parse(chars);
+                }
+                else
+                {
+                    return uint.Parse(ToString());
+                }
+#endif
             }
             catch (Exception)
             {

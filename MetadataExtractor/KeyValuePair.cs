@@ -3,20 +3,14 @@
 namespace MetadataExtractor
 {
     /// <summary>
-    /// Models a key/value pair, where both are non-null <see cref="string"/> objects.
+    /// Models a key/value pair, where both are non-<see langword="null"/> <see cref="string"/> objects.
     /// </summary>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class KeyValuePair
+    public readonly struct KeyValuePair(string key, StringValue value)
     {
-        public KeyValuePair(string key, StringValue value)
-        {
-            Key = key;
-            Value = value;
-        }
+        public string Key { get; } = key;
 
-        public string Key { get; }
-
-        public StringValue Value { get; }
+        public StringValue Value { get; } = value;
 
         public void Deconstruct(out string key, out StringValue value)
         {

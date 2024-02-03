@@ -14,13 +14,9 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
     /// </remarks>
     /// <author>Drew Noakes https://drewnoakes.com</author>
     /// <author>Philipp Sandhaus</author>
-    public sealed class PanasonicMakernoteDescriptor : TagDescriptor<PanasonicMakernoteDirectory>
+    public sealed class PanasonicMakernoteDescriptor(PanasonicMakernoteDirectory directory)
+        : TagDescriptor<PanasonicMakernoteDirectory>(directory)
     {
-        public PanasonicMakernoteDescriptor(PanasonicMakernoteDirectory directory)
-            : base(directory)
-        {
-        }
-
         public override string? GetDescription(int tagType)
         {
             return tagType switch
@@ -259,7 +255,7 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (bytes is null)
                 return null;
 
-            return string.Join(".", bytes.Select(b => b.ToString()).ToArray());
+            return string.Join(".", bytes);
         }
 
         public string? GetIntelligentDRangeDescription()
@@ -531,12 +527,7 @@ namespace MetadataExtractor.Formats.Exif.Makernotes
             if (faces is null)
                 return null;
 
-            var description = string.Join(Environment.NewLine,
-                faces.Select((f, i) => $"Face {i + 1}: {f}")
-#if NET35
-                .ToArray()
-#endif
-                );
+            var description = string.Join(Environment.NewLine, faces.Select((f, i) => $"Face {i + 1}: {f}"));
 
             return description.Length == 0 ? null : description;
         }
