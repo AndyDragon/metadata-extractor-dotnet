@@ -274,7 +274,6 @@ const MetadataExtractor.Formats.Exif.ExifDirectoryBase.TagYCbCrSubsampling = 530
 const MetadataExtractor.Formats.Exif.ExifDirectoryBase.TagYResolution = 283 -> int
 const MetadataExtractor.Formats.Exif.ExifIfd0Directory.TagExifSubIfdOffset = 34665 -> int
 const MetadataExtractor.Formats.Exif.ExifIfd0Directory.TagGpsInfoOffset = 34853 -> int
-static MetadataExtractor.Formats.Exif.ExifReader.JpegSegmentPreamble.get -> System.ReadOnlySpan<byte>
 const MetadataExtractor.Formats.Exif.ExifSubIfdDirectory.TagInteropOffset = 40965 -> int
 const MetadataExtractor.Formats.Exif.ExifThumbnailDirectory.TagThumbnailLength = 514 -> int
 const MetadataExtractor.Formats.Exif.ExifThumbnailDirectory.TagThumbnailOffset = 513 -> int
@@ -1766,6 +1765,7 @@ const MetadataExtractor.Formats.Flir.FlirRawDataDirectory.TagRawThermalImage = 1
 const MetadataExtractor.Formats.Flir.FlirRawDataDirectory.TagRawThermalImageHeight = 4 -> int
 const MetadataExtractor.Formats.Flir.FlirRawDataDirectory.TagRawThermalImageType = 34 -> int
 const MetadataExtractor.Formats.Flir.FlirRawDataDirectory.TagRawThermalImageWidth = 2 -> int
+const MetadataExtractor.Formats.Flir.FlirReader.JpegSegmentPreamble = "FLIR\0" -> string!
 const MetadataExtractor.Formats.GeoTiff.GeoTiffDirectory.TagChartContourInterval = 47017 -> int
 const MetadataExtractor.Formats.GeoTiff.GeoTiffDirectory.TagChartCorrDate = 47005 -> int
 const MetadataExtractor.Formats.GeoTiff.GeoTiffDirectory.TagChartCountryOrigin = 47006 -> int
@@ -1950,7 +1950,6 @@ const MetadataExtractor.Formats.Icc.IccDirectory.TagTag_KTrc = 1800688195 -> int
 const MetadataExtractor.Formats.Icc.IccDirectory.TagTag_RTrc = 1918128707 -> int
 const MetadataExtractor.Formats.Icc.IccDirectory.TagTag_RXyz = 1918392666 -> int
 const MetadataExtractor.Formats.Icc.IccDirectory.TagXyzValues = 68 -> int
-static MetadataExtractor.Formats.Icc.IccReader.JpegSegmentPreamble.get -> System.ReadOnlySpan<byte>
 const MetadataExtractor.Formats.Ico.IcoDirectory.TagBitsPerPixel = 7 -> int
 const MetadataExtractor.Formats.Ico.IcoDirectory.TagColourPaletteSize = 4 -> int
 const MetadataExtractor.Formats.Ico.IcoDirectory.TagColourPlanes = 5 -> int
@@ -2044,9 +2043,7 @@ const MetadataExtractor.Formats.Jfif.JfifDirectory.TagThumbHeight = 13 -> int
 const MetadataExtractor.Formats.Jfif.JfifDirectory.TagThumbWidth = 12 -> int
 const MetadataExtractor.Formats.Jfif.JfifDirectory.TagUnits = 7 -> int
 const MetadataExtractor.Formats.Jfif.JfifDirectory.TagVersion = 5 -> int
-static MetadataExtractor.Formats.Jfif.JfifReader.JpegSegmentPreamble.get -> System.ReadOnlySpan<byte>
 const MetadataExtractor.Formats.Jfxx.JfxxDirectory.TagExtensionCode = 5 -> int
-static MetadataExtractor.Formats.Jfxx.JfxxReader.JpegSegmentPreamble.get -> System.ReadOnlySpan<byte>
 const MetadataExtractor.Formats.Jpeg.HuffmanTablesDirectory.TagNumberOfTables = 1 -> int
 const MetadataExtractor.Formats.Jpeg.JpegCommentDirectory.TagComment = 0 -> int
 const MetadataExtractor.Formats.Jpeg.JpegDirectory.TagComponentData1 = 6 -> int
@@ -2088,7 +2085,6 @@ const MetadataExtractor.Formats.Pcx.PcxDirectory.TagYMin = 4 -> int
 const MetadataExtractor.Formats.Photoshop.DuckyDirectory.TagComment = 2 -> int
 const MetadataExtractor.Formats.Photoshop.DuckyDirectory.TagCopyright = 3 -> int
 const MetadataExtractor.Formats.Photoshop.DuckyDirectory.TagQuality = 1 -> int
-static MetadataExtractor.Formats.Photoshop.DuckyReader.JpegSegmentPreamble.get -> System.ReadOnlySpan<byte>
 const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagAlphaChannels = 1006 -> int
 const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagAlphaIdentifiers = 1053 -> int
 const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagAlternateDuotoneColors = 1066 -> int
@@ -2177,7 +2173,6 @@ const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagWinDevmode = 108
 const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagWorkflowUrl = 1051 -> int
 const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagXml = 1002 -> int
 const MetadataExtractor.Formats.Photoshop.PhotoshopDirectory.TagXmpData = 1060 -> int
-static MetadataExtractor.Formats.Photoshop.PhotoshopReader.JpegSegmentPreamble.get -> System.ReadOnlySpan<byte>
 const MetadataExtractor.Formats.Photoshop.PsdHeaderDirectory.TagBitsPerChannel = 4 -> int
 const MetadataExtractor.Formats.Photoshop.PsdHeaderDirectory.TagChannelCount = 1 -> int
 const MetadataExtractor.Formats.Photoshop.PsdHeaderDirectory.TagColorMode = 5 -> int
@@ -3458,7 +3453,6 @@ MetadataExtractor.Formats.Jpeg.JpegProcessingException
 MetadataExtractor.Formats.Jpeg.JpegProcessingException.JpegProcessingException(string? message) -> void
 MetadataExtractor.Formats.Jpeg.JpegProcessingException.JpegProcessingException(string? message, System.Exception? innerException) -> void
 MetadataExtractor.Formats.Jpeg.JpegProcessingException.JpegProcessingException(System.Exception? innerException) -> void
-MetadataExtractor.Formats.Jpeg.JpegProcessingException.JpegProcessingException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.Formats.Jpeg.JpegReader
 MetadataExtractor.Formats.Jpeg.JpegReader.Extract(MetadataExtractor.Formats.Jpeg.JpegSegment! segment) -> MetadataExtractor.Formats.Jpeg.JpegDirectory!
 MetadataExtractor.Formats.Jpeg.JpegReader.JpegReader() -> void
@@ -3654,7 +3648,6 @@ MetadataExtractor.Formats.Png.PngProcessingException
 MetadataExtractor.Formats.Png.PngProcessingException.PngProcessingException(string? message) -> void
 MetadataExtractor.Formats.Png.PngProcessingException.PngProcessingException(string? message, System.Exception? innerException) -> void
 MetadataExtractor.Formats.Png.PngProcessingException.PngProcessingException(System.Exception? innerException) -> void
-MetadataExtractor.Formats.Png.PngProcessingException.PngProcessingException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.Formats.QuickTime.AtomCallbackArgs
 MetadataExtractor.Formats.QuickTime.AtomCallbackArgs.AtomCallbackArgs(uint type, long size, System.IO.Stream! stream, long startPosition, MetadataExtractor.IO.SequentialStreamReader! reader) -> void
 MetadataExtractor.Formats.QuickTime.AtomCallbackArgs.BytesLeft.get -> long
@@ -3707,7 +3700,6 @@ MetadataExtractor.Formats.Riff.RiffProcessingException
 MetadataExtractor.Formats.Riff.RiffProcessingException.RiffProcessingException(string? message) -> void
 MetadataExtractor.Formats.Riff.RiffProcessingException.RiffProcessingException(string? message, System.Exception? innerException) -> void
 MetadataExtractor.Formats.Riff.RiffProcessingException.RiffProcessingException(System.Exception? innerException) -> void
-MetadataExtractor.Formats.Riff.RiffProcessingException.RiffProcessingException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.Formats.Riff.RiffReader
 MetadataExtractor.Formats.Riff.RiffReader.ProcessRiff(MetadataExtractor.IO.SequentialReader! reader, MetadataExtractor.Formats.Riff.IRiffHandler! handler) -> void
 MetadataExtractor.Formats.Riff.RiffReader.RiffReader() -> void
@@ -3822,7 +3814,6 @@ MetadataExtractor.Formats.Tiff.TiffProcessingException
 MetadataExtractor.Formats.Tiff.TiffProcessingException.TiffProcessingException(string? message) -> void
 MetadataExtractor.Formats.Tiff.TiffProcessingException.TiffProcessingException(string? message, System.Exception? innerException) -> void
 MetadataExtractor.Formats.Tiff.TiffProcessingException.TiffProcessingException(System.Exception? innerException) -> void
-MetadataExtractor.Formats.Tiff.TiffProcessingException.TiffProcessingException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.Formats.Tiff.TiffReader
 MetadataExtractor.Formats.Tiff.TiffReaderContext
 MetadataExtractor.Formats.Tiff.TiffReaderContext.IsBigTiff.get -> bool
@@ -3885,7 +3876,6 @@ MetadataExtractor.ImageProcessingException
 MetadataExtractor.ImageProcessingException.ImageProcessingException(string? message) -> void
 MetadataExtractor.ImageProcessingException.ImageProcessingException(string? message, System.Exception? innerException) -> void
 MetadataExtractor.ImageProcessingException.ImageProcessingException(System.Exception? innerException) -> void
-MetadataExtractor.ImageProcessingException.ImageProcessingException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.IO.BitReader
 MetadataExtractor.IO.BitReader.BitReader(MetadataExtractor.IO.SequentialReader! source) -> void
 MetadataExtractor.IO.BitReader.GetBit() -> bool
@@ -3897,7 +3887,6 @@ MetadataExtractor.IO.BufferBoundsException
 MetadataExtractor.IO.BufferBoundsException.BufferBoundsException() -> void
 MetadataExtractor.IO.BufferBoundsException.BufferBoundsException(int index, int bytesRequested, long bufferLength) -> void
 MetadataExtractor.IO.BufferBoundsException.BufferBoundsException(string! message) -> void
-MetadataExtractor.IO.BufferBoundsException.BufferBoundsException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.IO.ByteArrayReader
 MetadataExtractor.IO.ByteArrayReader.ByteArrayReader(byte[]! buffer, int baseOffset = 0, bool isMotorolaByteOrder = true) -> void
 MetadataExtractor.IO.IndexedCapturingReader
@@ -3957,7 +3946,6 @@ MetadataExtractor.MetadataException
 MetadataExtractor.MetadataException.MetadataException(string? msg) -> void
 MetadataExtractor.MetadataException.MetadataException(string? msg, System.Exception? innerException) -> void
 MetadataExtractor.MetadataException.MetadataException(System.Exception? innerException) -> void
-MetadataExtractor.MetadataException.MetadataException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 MetadataExtractor.Rational
 MetadataExtractor.Rational.Absolute.get -> MetadataExtractor.Rational
 MetadataExtractor.Rational.Denominator.get -> long
@@ -4404,7 +4392,6 @@ static MetadataExtractor.Formats.Jpeg.HuffmanTablesDirectory.TypicalLuminanceAcL
 static MetadataExtractor.Formats.Jpeg.HuffmanTablesDirectory.TypicalLuminanceAcValues.get -> System.ReadOnlySpan<byte>
 static MetadataExtractor.Formats.Jpeg.HuffmanTablesDirectory.TypicalLuminanceDcLengths.get -> System.ReadOnlySpan<byte>
 static MetadataExtractor.Formats.Jpeg.HuffmanTablesDirectory.TypicalLuminanceDcValues.get -> System.ReadOnlySpan<byte>
-static readonly MetadataExtractor.Formats.Png.PngColorType.Greyscale -> MetadataExtractor.Formats.Png.PngColorType!
 static readonly MetadataExtractor.Formats.Png.PngColorType.GreyscaleWithAlpha -> MetadataExtractor.Formats.Png.PngColorType!
 static readonly MetadataExtractor.Formats.Png.PngColorType.IndexedColor -> MetadataExtractor.Formats.Png.PngColorType!
 static readonly MetadataExtractor.Formats.Png.PngColorType.TrueColor -> MetadataExtractor.Formats.Png.PngColorType!

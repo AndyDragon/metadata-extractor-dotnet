@@ -5,7 +5,7 @@ namespace MetadataExtractor.Formats.QuickTime
     /// <author>Dmitry Shechtman</author>
     internal sealed class QuickTimeTypeChecker : ITypeChecker
     {
-        private static readonly ByteTrie<Util.FileType> _ftypTrie = new(Util.FileType.QuickTime)
+        private static readonly ByteTrie<Util.FileType> _ftypTrie = new(defaultValue: Util.FileType.QuickTime)
         {
             // http://www.ftyps.com
 
@@ -53,6 +53,9 @@ namespace MetadataExtractor.Formats.QuickTime
             { Util.FileType.Heif, "heix"u8 },
             { Util.FileType.Heif, "hevc"u8 },
             { Util.FileType.Heif, "hevx"u8 },
+
+            // AVIF
+            { Util.FileType.Avif, "avif"u8 },
 
             // CRX
             { Util.FileType.Crx, "crx "u8 }

@@ -10,7 +10,7 @@ namespace MetadataExtractor
     /// <para />
     /// This type is immutable.
     /// </remarks>
-    public sealed class GeoLocation
+    public readonly struct GeoLocation : IEquatable<GeoLocation>
     {
         /// <summary>
         /// Initialises an instance of <see cref="GeoLocation"/>.
@@ -76,19 +76,27 @@ namespace MetadataExtractor
 
         #region Equality and Hashing
 
-        private bool Equals(GeoLocation other) => Latitude.Equals(other.Latitude) &&
-                                                  Longitude.Equals(other.Longitude);
+        public bool Equals(GeoLocation other)
+        {
+            return Latitude.Equals(other.Latitude) && Longitude.Equals(other.Longitude);
+        }
 
         public override bool Equals(object? obj)
         {
-            if (obj is null)
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
             return obj is GeoLocation location && Equals(location);
         }
 
-        public override int GetHashCode() => unchecked((Latitude.GetHashCode() * 397) ^ Longitude.GetHashCode());
+        public override int GetHashCode()
+        {
+#if NET8_0_OR_GREATER
+            HashCode hash = new();
+            hash.Add(Latitude);
+            hash.Add(Longitude);
+            return hash.ToHashCode();
+#else
+            return unchecked((Latitude.GetHashCode() * 397) ^ Longitude.GetHashCode());
+#endif
+        }
 
         #endregion
 

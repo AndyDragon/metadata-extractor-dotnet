@@ -88,7 +88,10 @@ namespace MetadataExtractor.Util
         Heif = 26,
 
         /// <summary>MPEG-4 Part 14.</summary>
-        Mp4 = 27
+        Mp4 = 27,
+
+        /// <summary>AV1 Image File Format.</summary>
+        Avif = 28
     }
 
     public static class FileTypeExtensions
@@ -122,7 +125,8 @@ namespace MetadataExtractor.Util
             "TGA",
             "MP3",
             "HEIF",
-            "MP4"
+            "MP4",
+            "AVIF"
         ];
 
         private static readonly string[] _longNames =
@@ -155,6 +159,7 @@ namespace MetadataExtractor.Util
             "MPEG Audio Layer III",
             "High Efficiency Image File Format",
             "MPEG-4 Part 14",
+            "AV1 Image File Format",
         ];
 
         private static readonly string?[] _mimeTypes =
@@ -187,6 +192,7 @@ namespace MetadataExtractor.Util
             "audio/mpeg",
             "image/heic",
             "video/mp4",
+            "image/avif"
         ];
 
         private static readonly string[]?[] _extensions =
@@ -218,45 +224,46 @@ namespace MetadataExtractor.Util
             ["tga", "icb", "vda", "vst"],
             ["mp3"],
             ["heic", "heif", "avci"],
-            ["mp4", "m4a", "m4p", "m4b", "m4r", "m4v"]
+            ["mp4", "m4a", "m4p", "m4b", "m4r", "m4v"],
+            ["avif"]
         ];
 
         public static string GetName(this FileType fileType)
         {
-            var i = (int)fileType;
-            if (i < 0 || i >= _shortNames.Length)
+            var i = (uint)fileType;
+            if (i >= _shortNames.Length)
                 throw new ArgumentException($"Invalid {nameof(FileType)} enum member.", nameof(fileType));
             return _shortNames[i];
         }
 
         public static string GetLongName(this FileType fileType)
         {
-            var i = (int)fileType;
-            if (i < 0 || i >= _longNames.Length)
+            var i = (uint)fileType;
+            if (i >= _longNames.Length)
                 throw new ArgumentException($"Invalid {nameof(FileType)} enum member.", nameof(fileType));
             return _longNames[i];
         }
 
         public static string? GetMimeType(this FileType fileType)
         {
-            var i = (int)fileType;
-            if (i < 0 || i >= _mimeTypes.Length)
+            var i = (uint)fileType;
+            if (i >= _mimeTypes.Length)
                 throw new ArgumentException($"Invalid {nameof(FileType)} enum member.", nameof(fileType));
             return _mimeTypes[i];
         }
 
         public static string? GetCommonExtension(this FileType fileType)
         {
-            var i = (int)fileType;
-            if (i < 0 || i >= _extensions.Length)
+            var i = (uint)fileType;
+            if (i >= _extensions.Length)
                 throw new ArgumentException($"Invalid {nameof(FileType)} enum member.", nameof(fileType));
             return _extensions[i]?.FirstOrDefault();
         }
 
         public static IEnumerable<string>? GetAllExtensions(this FileType fileType)
         {
-            var i = (int)fileType;
-            if (i < 0 || i >= _extensions.Length)
+            var i = (uint)fileType;
+            if (i >= _extensions.Length)
                 throw new ArgumentException($"Invalid {nameof(FileType)} enum member.", nameof(fileType));
             return _extensions[i];
         }

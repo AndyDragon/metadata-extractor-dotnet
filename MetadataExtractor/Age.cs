@@ -7,7 +7,7 @@ namespace MetadataExtractor
     /// Used by certain Panasonic cameras which have face recognition features.
     /// </remarks>
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class Age(int years, int months, int days, int hours, int minutes, int seconds)
+    public sealed class Age(int years, int months, int days, int hours, int minutes, int seconds) : IEquatable<Age>
     {
         public int Years { get; } = years;
 
@@ -79,22 +79,30 @@ namespace MetadataExtractor
 
         #region Equality and hashing
 
-        private bool Equals(Age? other)
+        public bool Equals(Age? other)
         {
+            if (ReferenceEquals(this, other))
+                return true;
             return other is not null && Years == other.Years && Months == other.Months && Days == other.Days && Hours == other.Hours && Minutes == other.Minutes && Seconds == other.Seconds;
         }
 
         public override bool Equals(object? obj)
         {
-            if (obj is null)
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
             return obj is Age age && Equals(age);
         }
 
         public override int GetHashCode()
         {
+#if NET8_0_OR_GREATER
+            HashCode hash = new();
+            hash.Add(Years);
+            hash.Add(Months);
+            hash.Add(Days);
+            hash.Add(Hours);
+            hash.Add(Minutes);
+            hash.Add(Seconds);
+            return hash.ToHashCode();
+#else
             unchecked
             {
                 var hashCode = Years;
@@ -105,6 +113,7 @@ namespace MetadataExtractor
                 hashCode = (hashCode * 397) ^ Seconds;
                 return hashCode;
             }
+#endif
         }
 
         #endregion

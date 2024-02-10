@@ -3,10 +3,10 @@
 namespace MetadataExtractor.Formats.Png
 {
     /// <author>Drew Noakes https://drewnoakes.com</author>
-    public sealed class PngChunkType
+    public readonly struct PngChunkType : IEquatable<PngChunkType>
     {
-        private static readonly ICollection<string> _identifiersAllowingMultiples
-            = new HashSet<string> { "IDAT", "sPLT", "iTXt", "tEXt", "zTXt" };
+        private static readonly HashSet<string> _identifiersAllowingMultiples
+            = new(StringComparer.Ordinal) { "IDAT", "sPLT", "iTXt", "tEXt", "zTXt" };
 
 #pragma warning disable IDE1006 // Naming Styles
 
@@ -152,18 +152,26 @@ namespace MetadataExtractor.Formats.Png
 
         #region Equality and Hashing
 
-        private bool Equals(PngChunkType other) => _bytes.SequenceEqual(other._bytes);
+        public bool Equals(PngChunkType other)
+        {
+            return _bytes is not null && _bytes.SequenceEqual(other._bytes);
+        }
 
         public override bool Equals(object? obj)
         {
-            if (obj is null)
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            return obj is PngChunkType t && Equals(t);
+            return obj is PngChunkType other && Equals(other);
         }
 
-        public override int GetHashCode() => _bytes[0] << 24 | _bytes[1] << 16 << _bytes[2] << 8 | _bytes[3];
+        public override int GetHashCode()
+        {
+#if NET8_0_OR_GREATER
+            HashCode hash = new();
+            hash.AddBytes(_bytes);
+            return hash.ToHashCode();
+#else
+            return _bytes[0] << 24 | _bytes[1] << 16 << _bytes[2] << 8 | _bytes[3];
+#endif
+        }
 
         public static bool operator ==(PngChunkType left, PngChunkType right) => Equals(left, right);
         public static bool operator !=(PngChunkType left, PngChunkType right) => !Equals(left, right);

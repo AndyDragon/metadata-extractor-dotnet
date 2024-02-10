@@ -84,7 +84,6 @@ namespace MetadataExtractor.Formats.Png
         /// For more guidance: http://www.w3.org/TR/PNG-Decoders.html#D.Text-chunk-processing
         /// </summary>
         private static readonly Encoding _latin1Encoding = Encoding.GetEncoding("ISO-8859-1");
-        private static readonly Encoding _utf8Encoding = Encoding.UTF8;
 
         /// <exception cref="PngProcessingException"/>
         /// <exception cref="IOException"/>
@@ -148,7 +147,7 @@ namespace MetadataExtractor.Formats.Png
             }
             else if (chunkType == PngChunkType.iCCP)
             {
-                var reader = new SequentialByteArrayReader(bytes);
+                var reader = new BufferReader(bytes, isBigEndian: true);
                 var profileName = reader.GetNullTerminatedStringValue(maxLengthBytes: 79);
                 var directory = new PngDirectory(PngChunkType.iCCP);
                 directory.Set(PngDirectory.TagIccProfileName, profileName);
@@ -171,7 +170,8 @@ namespace MetadataExtractor.Formats.Png
                     try
                     {
                         using var inflaterStream = new DeflateStream(new MemoryStream(compressedProfile), CompressionMode.Decompress);
-                        iccDirectory = new IccReader().Extract(new IndexedCapturingReader(inflaterStream));
+                        using var iccReader = new IndexedCapturingReader(inflaterStream);
+                        iccDirectory = new IccReader().Extract(iccReader);
                         iccDirectory.Parent = directory;
                     }
                     catch (Exception e)
@@ -198,7 +198,7 @@ namespace MetadataExtractor.Formats.Png
             }
             else if (chunkType == PngChunkType.tEXt)
             {
-                var reader = new SequentialByteArrayReader(bytes);
+                var reader = new BufferReader(bytes, isBigEndian: true);
                 var keyword = reader.GetNullTerminatedStringValue(maxLengthBytes: 79).ToString(_latin1Encoding);
                 var bytesLeft = bytes.Length - keyword.Length - 1;
                 var value = reader.GetNullTerminatedStringValue(bytesLeft, _latin1Encoding);
@@ -210,7 +210,7 @@ namespace MetadataExtractor.Formats.Png
             }
             else if (chunkType == PngChunkType.zTXt)
             {
-                var reader = new SequentialByteArrayReader(bytes);
+                var reader = new BufferReader(bytes, isBigEndian: true);
                 var keyword = reader.GetNullTerminatedStringValue(maxLengthBytes: 79).ToString(_latin1Encoding);
                 var compressionMethod = reader.GetSByte();
 
@@ -242,9 +242,9 @@ namespace MetadataExtractor.Formats.Png
             }
             else if (chunkType == PngChunkType.iTXt)
             {
-                var reader = new SequentialByteArrayReader(bytes);
+                var reader = new BufferReader(bytes, isBigEndian: true);
                 var keywordStringValue = reader.GetNullTerminatedStringValue(maxLengthBytes: 79);
-                var keyword = keywordStringValue.ToString(_utf8Encoding);
+                var keyword = keywordStringValue.ToString(Encoding.UTF8);
                 var compressionFlag = reader.GetSByte();
                 var compressionMethod = reader.GetSByte();
 
@@ -295,36 +295,56 @@ namespace MetadataExtractor.Formats.Png
             }
             else if (chunkType == PngChunkType.tIME)
             {
-                var reader = new SequentialByteArrayReader(bytes);
-                var year = reader.GetUInt16();
-                var month = reader.GetByte();
-                int day = reader.GetByte();
-                int hour = reader.GetByte();
-                int minute = reader.GetByte();
-                int second = reader.GetByte();
                 var directory = new PngDirectory(PngChunkType.tIME);
-                if (DateUtil.IsValidDate(year, month, day) && DateUtil.IsValidTime(hour, minute, second))
+
+                if (bytes.Length < 2 + 1 + 1 + 1 + 1 + 1)
                 {
-                    var time = new DateTime(year, month, day, hour, minute, second, DateTimeKind.Unspecified);
-                    directory.Set(PngDirectory.TagLastModificationTime, time);
+                    directory.AddError("Insufficient bytes for PNG tIME chunk.");
                 }
                 else
                 {
-                    directory.AddError($"PNG tIME data describes an invalid date/time: year={year} month={month} day={day} hour={hour} minute={minute} second={second}");
+                    var reader = new BufferReader(bytes, isBigEndian: true);
+
+                    var year = reader.GetUInt16();
+                    var month = reader.GetByte();
+                    int day = reader.GetByte();
+                    int hour = reader.GetByte();
+                    int minute = reader.GetByte();
+                    int second = reader.GetByte();
+
+                    if (DateUtil.IsValidDate(year, month, day) && DateUtil.IsValidTime(hour, minute, second))
+                    {
+                        var time = new DateTime(year, month, day, hour, minute, second, DateTimeKind.Unspecified);
+                        directory.Set(PngDirectory.TagLastModificationTime, time);
+                    }
+                    else
+                    {
+                        directory.AddError($"PNG tIME data describes an invalid date/time: year={year} month={month} day={day} hour={hour} minute={minute} second={second}");
+                    }
+                    yield return directory;
                 }
-                yield return directory;
             }
             else if (chunkType == PngChunkType.pHYs)
             {
-                var reader = new SequentialByteArrayReader(bytes);
-                var pixelsPerUnitX = reader.GetInt32();
-                var pixelsPerUnitY = reader.GetInt32();
-                var unitSpecifier = reader.GetSByte();
                 var directory = new PngDirectory(PngChunkType.pHYs);
-                directory.Set(PngDirectory.TagPixelsPerUnitX, pixelsPerUnitX);
-                directory.Set(PngDirectory.TagPixelsPerUnitY, pixelsPerUnitY);
-                directory.Set(PngDirectory.TagUnitSpecifier, unitSpecifier);
-                yield return directory;
+
+                if (bytes.Length < 4 + 4 + 1)
+                {
+                    directory.AddError("Insufficient bytes for PNG pHYs chunk.");
+                }
+                else
+                {
+                    var reader = new BufferReader(bytes, isBigEndian: true);
+
+                    var pixelsPerUnitX = reader.GetInt32();
+                    var pixelsPerUnitY = reader.GetInt32();
+                    var unitSpecifier = reader.GetSByte();
+
+                    directory.Set(PngDirectory.TagPixelsPerUnitX, pixelsPerUnitX);
+                    directory.Set(PngDirectory.TagPixelsPerUnitY, pixelsPerUnitY);
+                    directory.Set(PngDirectory.TagUnitSpecifier, unitSpecifier);
+                    yield return directory;
+                }
             }
             else if (chunkType.Equals(PngChunkType.sBIT))
             {
@@ -434,7 +454,7 @@ namespace MetadataExtractor.Formats.Png
 
                     if (pngChunkType == PngChunkType.iTXt)
                     {
-                        encoding = _utf8Encoding;
+                        encoding = Encoding.UTF8;
                     }
 
                     var textPairs = new[] { new KeyValuePair(keyword, new StringValue(textBytes, encoding)) };

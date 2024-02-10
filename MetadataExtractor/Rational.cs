@@ -233,12 +233,20 @@ namespace MetadataExtractor
 
         public override bool Equals(object? obj)
         {
-            if (obj is null)
-                return false;
             return obj is Rational rational && Equals(rational);
         }
 
-        public override int GetHashCode() => unchecked(Denominator.GetHashCode() * 397) ^ Numerator.GetHashCode();
+        public override int GetHashCode()
+        {
+#if NET8_0_OR_GREATER
+            HashCode hash = new();
+            hash.Add(Denominator);
+            hash.Add(Numerator);
+            return hash.ToHashCode();
+#else
+            return unchecked(Denominator.GetHashCode() * 397) ^ Numerator.GetHashCode();
+#endif
+        }
 
         #endregion
 
@@ -307,7 +315,7 @@ namespace MetadataExtractor
 #if !NETSTANDARD1_3
         private sealed class RationalConverter : TypeConverter
         {
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+            public override bool CanConvertFrom(ITypeDescriptorContext? context, Type sourceType)
             {
                 if (sourceType == typeof(string) ||
                     sourceType == typeof(Rational) ||
@@ -318,11 +326,8 @@ namespace MetadataExtractor
                 return base.CanConvertFrom(context, sourceType);
             }
 
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+            public override object? ConvertFrom(ITypeDescriptorContext? context, CultureInfo? culture, object value)
             {
-                if (value is null)
-                    return base.ConvertFrom(context, culture, null);
-
                 var type = value.GetType();
 
                 if (type == typeof(string))
@@ -349,7 +354,7 @@ namespace MetadataExtractor
                 return new Rational(Convert.ToInt64(value), 1);
             }
 
-            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => false;
+            public override bool CanConvertTo(ITypeDescriptorContext? context, [NotNullWhen(true)] Type? destinationType) => false;
         }
 #endif
 
