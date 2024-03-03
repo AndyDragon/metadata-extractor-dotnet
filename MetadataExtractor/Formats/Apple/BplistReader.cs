@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using System.Buffers;
-
 namespace MetadataExtractor.Formats.Apple;
 
 /// <summary>
@@ -13,42 +11,27 @@ public sealed class BplistReader
     // https://opensource.apple.com/source/CF/CF-550/CFBinaryPList.c
     // https://synalysis.com/how-to-decode-apple-binary-property-list-files/
 
-    private static ReadOnlySpan<byte> BplistHeader => "bplist00"u8;
-
     /// <summary>
     /// Gets whether <paramref name="bplist"/> starts with the expected header bytes.
     /// </summary>
-    public static bool IsValid(byte[] bplist)
+    public static bool IsValid(ReadOnlySpan<byte> bplist)
     {
-        if (bplist.Length < BplistHeader.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < BplistHeader.Length; i++)
-        {
-            if (bplist[i] != BplistHeader[i])
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return bplist.StartsWith("bplist00"u8);
     }
 
-    public static PropertyListResults Parse(byte[] bplist)
+    public static PropertyListResults Parse(ReadOnlySpan<byte> bplist)
     {
         if (!IsValid(bplist))
         {
             throw new ArgumentException("Input is not a bplist.", nameof(bplist));
         }
 
-        Trailer trailer = ReadTrailer();
+        Trailer trailer = ReadTrailer(bplist);
 
         int offset = checked((int)(trailer.OffsetTableOffset + trailer.TopObject));
-        var reader = new BufferReader(bplist.AsSpan(offset), isBigEndian: true);
+        var reader = new BufferReader(bplist.Slice(offset), isBigEndian: true);
 
-        int[] offsets = new int[(int)trailer.NumObjects];
+        var offsets = new int[(int)trailer.NumObjects];
 
         for (int i = 0; i < (int)trailer.NumObjects; i++)
         {
@@ -66,7 +49,7 @@ public sealed class BplistReader
 
         for (int i = 0; i < offsets.Length; i++)
         {
-            reader = new BufferReader(bplist.AsSpan(offsets[i]), isBigEndian: true);
+            reader = new BufferReader(bplist.Slice(offsets[i]), isBigEndian: true);
 
             byte b = reader.GetByte();
 
@@ -92,9 +75,9 @@ public sealed class BplistReader
 
         return new PropertyListResults(objects, trailer);
 
-        Trailer ReadTrailer()
+        static Trailer ReadTrailer(ReadOnlySpan<byte> bplist)
         {
-            var reader = new BufferReader(bplist.AsSpan(bplist.Length - Trailer.SizeBytes), isBigEndian: true);
+            var reader = new BufferReader(bplist.Slice(bplist.Length - Trailer.SizeBytes), isBigEndian: true);
 
             // Skip 5-byte unused values, 1-byte sort version.
             reader.Skip(5 + 1);
@@ -123,12 +106,9 @@ public sealed class BplistReader
 
         static Dictionary<byte, byte> HandleDict(ref BufferReader reader, byte count)
         {
-            var keyRefs = ArrayPool<byte>.Shared.Rent(count);
+            Span<byte> keyRefs = stackalloc byte[count]; // count is a byte (0-255)
 
-            for (int j = 0; j < count; j++)
-            {
-                keyRefs[j] = reader.GetByte();
-            }
+            reader.GetBytes(keyRefs);
 
             Dictionary<byte, byte> map = [];
 
@@ -136,8 +116,6 @@ public sealed class BplistReader
             {
                 map.Add(keyRefs[j], reader.GetByte());
             }
-
-            ArrayPool<byte>.Shared.Return(keyRefs);
 
             return map;
         }
