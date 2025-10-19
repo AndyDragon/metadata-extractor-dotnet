@@ -1,9 +1,8 @@
 // Copyright (c) Drew Noakes and contributors. All Rights Reserved. Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
-using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Jpeg;
 
-namespace MetadataExtractor.Tests.Formats.Exif
+namespace MetadataExtractor.Formats.Exif
 {
     /// <summary>
     /// Unit tests for <see cref="ExifSubIfdDirectory"/>, <see cref="ExifIfd0Directory"/>, <see cref="ExifThumbnailDirectory"/>.
@@ -46,6 +45,24 @@ namespace MetadataExtractor.Tests.Formats.Exif
             Assert.True(gpsDirectory.TryGetGeoLocation(out GeoLocation geoLocation));
             Assert.Equal(54.989666666666665, geoLocation.Latitude);
             Assert.Equal(-1.9141666666666666, geoLocation.Longitude);
+        }
+
+        [Fact]
+        public void GetGeoLocation()
+        {
+            var gpsDirectory = ExifReaderTest.ProcessSegmentBytes<GpsDirectory>("Data/withExifAndIptc.jpg.app1.0", JpegSegmentType.App1);
+            var geoLocation = gpsDirectory.GetGeoLocation();
+            Assert.NotNull(geoLocation);
+            Assert.Equal(54.989666666666665, geoLocation.Value.Latitude);
+            Assert.Equal(-1.9141666666666666, geoLocation.Value.Longitude);
+        }
+
+        [Fact]
+        public void GetGeoLocationReturnsNullWhenNoGpsData()
+        {
+            var gpsDirectory = new GpsDirectory();
+            var geoLocation = gpsDirectory.GetGeoLocation();
+            Assert.Null(geoLocation);
         }
 
         [Fact]

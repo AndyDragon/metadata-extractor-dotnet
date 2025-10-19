@@ -1,12 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net472</TargetFrameworks>
+    <TargetFrameworks>$(ModernDotNetTargetFrameworkAlias);net472</TargetFrameworks>
 
-    <RestoreAdditionalProjectSources>
-      $(RestoreAdditionalProjectSources);
-      https://www.myget.org/F/xunit/api/v3/index.json
-    </RestoreAdditionalProjectSources>
+    <RootNamespace>MetadataExtractor</RootNamespace>
+
   </PropertyGroup>
 
   <ItemGroup>
